@@ -16,3 +16,4 @@ Multi-tenant procurement platform. One repo: `VendorFlowAPI` (.NET), `VendorFlow
 - Tests: `dotnet test VendorFlowAPI`
 - Web: `cd VendorFlowWEB; npm start` / `npm run build`
 - Mobile: `cd VendorFlowMOBILE; flutter analyze; flutter test`
+- Postgres: CALL arguments cannot contain subqueries; use a variable.
