@@ -1,0 +1,26 @@
+bin/
+obj/
+node_modules/
+dist/
+.angular/
+build/
+.dart_tool/
+.vs/
+.idea/
+*.user
+.env
+.env.*
+appsettings.Development.json
+appsettings.*.local.json
+*.pfx
+*.key
+uploads/
+storage/
+logs/
+TestResults/
+VendorDoc/*.zip
+VendorDoc/Demo Images/
+.flutter-plugins*
+*.log
+VendorDoc/*.md
+VendorDoc/*.txt
