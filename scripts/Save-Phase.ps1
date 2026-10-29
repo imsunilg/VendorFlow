@@ -8,7 +8,7 @@ param(
     [switch]$Push
 )
 
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Continue'  # git writes warnings to stderr; failures are checked via $LASTEXITCODE
 Set-Location (Split-Path $PSScriptRoot -Parent)
 
 if (-not (Test-Path .git)) { git init -b main | Out-Null }
@@ -38,7 +38,8 @@ if (Test-Path $secretFile) {
     }
 }
 
-git commit -m $Message -m 'Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>' | Out-Null
+git commit -m $Message -m "Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>" | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "git commit failed" }
 $hash = git rev-parse --short HEAD
 Write-Host "Committed $hash : $Message"
 
