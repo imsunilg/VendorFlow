@@ -22,6 +22,8 @@ public static class DependencyInjection
         services.AddSingleton<IFileStorage, LocalFileStorage>();
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
         services.AddSingleton<IPoPdfGenerator, VendorFlow.Infrastructure.Documents.PoPdfGenerator>();
+        // Replace this registration with a real provider to enable AI extraction (see VendorFlowDocs/Architecture).
+        services.AddSingleton<IDocumentExtractionProvider, VendorFlow.Infrastructure.Documents.NullDocumentExtractionProvider>();
         return services;
     }
 }

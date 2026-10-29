@@ -17,7 +17,7 @@ public sealed class RfqSetup
     public static string TokenFromLink(string link) => link[(link.LastIndexOf("/portal/rfq/", StringComparison.Ordinal) + "/portal/rfq/".Length)..];
 
     /// <summary>An open RFQ for 8 switches with n invited approved vendors.</summary>
-    public static async Task<RfqSetup> Open(ApiFactory f, int vendorCount = 3, ApprovalOrg? org = null, DateTimeOffset? deadline = null)
+    public static async Task<RfqSetup> Open(ApiFactory f, int vendorCount = 3, ApprovalOrg? org = null, DateTimeOffset? deadline = null, TimeSpan? deadlineIn = null)
     {
         org ??= await ApprovalOrg.Create(f);
         var buyer = org.Tenant.Owner;
@@ -27,7 +27,7 @@ public sealed class RfqSetup
         var rfq = await (await buyer.PostJson("/api/v1/rfqs", new
         {
             title = "Network switches", description = "24-port PoE",
-            deadline = (deadline ?? DateTimeOffset.UtcNow.AddDays(5)).ToString("o"),
+            deadline = (deadlineIn is null ? deadline ?? DateTimeOffset.UtcNow.AddDays(5) : DateTimeOffset.UtcNow + deadlineIn.Value).ToString("o"),
             items = new[] { new { description = "24-port PoE switch", unit = "Nos", quantity = 8 } },
             vendorIds = vendors
         })).Ok();
@@ -206,7 +206,7 @@ public class RfqQuotationTests(ApiFactory factory)
     [Fact]
     public async Task Deadline_close_and_reopen_control_submission()
     {
-        var s = await RfqSetup.Open(factory, 1, deadline: DateTimeOffset.UtcNow.AddSeconds(3));
+        var s = await RfqSetup.Open(factory, 1, deadlineIn: TimeSpan.FromSeconds(3));
         Assert.Equal(HttpStatusCode.OK, (await s.Submit(factory, 0, s.Quote(100))).StatusCode);
         await Task.Delay(3500);
         Assert.Equal(HttpStatusCode.Conflict, (await s.Submit(factory, 0, s.Quote(90))).StatusCode);      // deadline passed

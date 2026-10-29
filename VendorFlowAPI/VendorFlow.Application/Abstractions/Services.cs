@@ -45,3 +45,19 @@ public interface IPoPdfGenerator
     /// <summary>Creates the purchase order PDF from the json returned by fn_po_pdf_data.</summary>
     byte[] Generate(System.Text.Json.Nodes.JsonNode data);
 }
+
+/// <summary>A value read from a document, with the model's confidence. Always a SUGGESTION: a person must confirm it.</summary>
+public record ExtractedField(string Name, string? Value, double Confidence);
+
+public record ExtractionResult(string DocumentType, IReadOnlyList<ExtractedField> Fields);
+
+/// <summary>
+/// Optional AI document extraction (quotation / invoice). Disabled unless a real provider is configured.
+/// Results are never saved or approved automatically; the user reviews them and uses the normal create endpoints.
+/// </summary>
+public interface IDocumentExtractionProvider
+{
+    bool IsEnabled { get; }
+    string Name { get; }
+    Task<ExtractionResult> ExtractAsync(string documentType, Stream content, string fileName, CancellationToken ct);
+}

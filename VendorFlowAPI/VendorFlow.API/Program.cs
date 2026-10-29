@@ -1,6 +1,9 @@
 using System.Text;
 using System.Threading.RateLimiting;
 using FluentValidation;
+using Hangfire;
+using Hangfire.PostgreSql;
+using VendorFlow.Infrastructure.Jobs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -77,6 +80,19 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database");
 
+// Background jobs (Hangfire with PostgreSQL storage). Disabled with Jobs:Enabled = false (used by the tests).
+var jobsEnabled = builder.Configuration.GetValue("Jobs:Enabled", true);
+builder.Services.AddScoped<MaintenanceJobs>();
+if (jobsEnabled)
+{
+    builder.Services.AddHangfire(c => c
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UsePostgreSqlStorage(o => o.UseNpgsqlConnection(builder.Configuration.GetConnectionString("VendorFlow")!)));
+    builder.Services.AddHangfireServer();
+}
+
 var app = builder.Build();
 
 // Create the database + schema automatically (Database:AutoMigrate = false disables it).
@@ -97,6 +113,15 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.MapControllers();
 app.MapHealthChecks("/health");
+
+if (jobsEnabled)
+{
+    // Hangfire dashboard: local requests only (default filter).
+    app.UseHangfireDashboard("/hangfire");
+    RecurringJob.AddOrUpdate<MaintenanceJobs>("daily-checks", j => j.RunChecksAsync(), "0 6 * * *");
+    RecurringJob.AddOrUpdate<MaintenanceJobs>("hourly-deadline-checks", j => j.RunChecksAsync(), Cron.Hourly());
+    RecurringJob.AddOrUpdate<MaintenanceJobs>("email-dispatch", j => j.DispatchEmailsAsync(), "*/5 * * * *");
+}
 
 app.Run();
 

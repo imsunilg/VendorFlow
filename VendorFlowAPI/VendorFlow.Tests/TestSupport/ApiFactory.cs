@@ -15,6 +15,9 @@ namespace VendorFlow.Tests.TestSupport;
 /// </summary>
 public sealed class ApiFactory : WebApplicationFactory<Program>
 {
+    // Read by Program.cs while the builder is created (in-memory overrides below would arrive too late for it).
+    static ApiFactory() => Environment.SetEnvironmentVariable("Jobs__Enabled", "false");
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
@@ -28,6 +31,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
                 ["ConnectionStrings:VendorFlow"] = testCs,
                 ["Database:ResetTestDb"] = "true",
                 ["Seed:DemoData"] = "false",
+                ["Jobs:Enabled"] = "false",
                 ["RateLimit:AuthPerMinute"] = "100000",
                 ["Storage:Path"] = Path.Combine(Path.GetTempPath(), "vendorflow-test-storage")
             });
