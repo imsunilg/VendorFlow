@@ -14,7 +14,7 @@ namespace VendorFlow.API.Controllers;
 [Route("api/v1/rfqs")]
 public class RfqsController(IDb db, ICurrentUser me, ITokenService tokens, IEmailSender mail, IConfiguration config) : ControllerBase
 {
-    private string PortalLink(string token) => $"{config["App:WebUrl"] ?? "http://localhost:4200"}/portal/rfq/{token}";
+    private string PortalLink(string token) => $"{config["App:WebUrl"] ?? "http://localhost:4230"}/portal/rfq/{token}";
 
     [RequirePermission(Permissions.RfqsView), HttpGet]
     public async Task<IActionResult> List([FromQuery] string? status, [FromQuery] string? search, [FromQuery] string? sortBy,

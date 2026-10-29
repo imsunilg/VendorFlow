@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { environment } from '../../../../environments/environment';
 import { SettingsService } from '../../../core/services/settings.service';
 
 @Component({
@@ -23,8 +24,30 @@ export class LoginComponent {
     remember: [!!localStorage.getItem('vf_remember')]
   });
 
+  // Demo logins (development only): one per role. All share the same demo password.
+  showDemo = !environment.production;
+  demoPassword = 'Demo@12345';
+  demoAccounts = [
+    { role: 'Organization Owner', email: 'priya.menon@democompany.in' },
+    { role: 'Organization Administrator', email: 'admin@democompany.in' },
+    { role: 'Procurement Manager', email: 'mark.w@democompany.in' },
+    { role: 'Procurement Officer', email: 'officer@democompany.in' },
+    { role: 'Department Manager', email: 'rahul.d@democompany.in' },
+    { role: 'Department Requester', email: 'anita.rao@democompany.in' },
+    { role: 'Approver', email: 'approver@democompany.in' },
+    { role: 'Finance Manager', email: 'sneha.i@democompany.in' },
+    { role: 'Accounts Payable Officer', email: 'ap@democompany.in' },
+    { role: 'Warehouse Manager', email: 'suresh.j@democompany.in' },
+    { role: 'Auditor', email: 'auditor@democompany.in' }
+  ];
+
   busy = false;
   errorMessage = '';
+
+  // Fills the form with a demo account.
+  useDemo(email: string): void {
+    this.form.patchValue({ email, password: this.demoPassword });
+  }
 
   // Signs in, loads the organization settings (labels) and opens the dashboard.
   submit(): void {

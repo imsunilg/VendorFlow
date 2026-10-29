@@ -10,7 +10,7 @@ docker compose up --build -d
 | URL | What |
 |---|---|
 | http://localhost:8080 | Web app (nginx; forwards `/api` to the API) |
-| http://localhost:5080/swagger | API (disable by not publishing the port in production) |
+| http://localhost:5230/swagger | API (disable by not publishing the port in production) |
 
 The API creates database `Vendor_db` and applies the schema/functions on start. Create the first organization at `/register` (demo data is **only** created in the Development environment).
 

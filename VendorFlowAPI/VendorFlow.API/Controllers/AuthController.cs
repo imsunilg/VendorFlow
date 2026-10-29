@@ -90,7 +90,7 @@ public class AuthController(IDb db, ITokenService tokens, IPasswordService passw
 
         if (user is not null && mail.IsConfigured)
         {
-            var link = $"{config["App:WebUrl"] ?? "http://localhost:4200"}/reset-password?token={token}";
+            var link = $"{config["App:WebUrl"] ?? "http://localhost:4230"}/reset-password?token={token}";
             await mail.SendAsync(user["email"]!.GetValue<string>(), "Reset your password", $"Use this link within one hour: {link}", ct);
         }
         // In Development the token is returned so the flow can be tested without an SMTP server.

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api_client.dart';
+import '../../core/config.dart';
 import '../../core/providers.dart';
 import '../../shared/widgets.dart';
 
@@ -90,6 +91,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     width: double.infinity, height: 50,
                     child: FilledButton(onPressed: _busy ? null : _submit, child: Text(_busy ? 'Signing in…' : 'Sign in')),
                   ),
+                  if (showDemoAccounts) ...[
+                    const SizedBox(height: 22),
+                    const Text('Demo accounts (password: $demoPassword)', style: TextStyle(fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 8),
+                    for (final a in demoAccounts)
+                      Card(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        child: ListTile(
+                          dense: true,
+                          title: Text(a.$1),
+                          subtitle: Text(a.$2),
+                          onTap: () => setState(() { _email.text = a.$2; _password.text = demoPassword; }),
+                        ),
+                      ),
+                  ],
                 ]),
               ),
             ),

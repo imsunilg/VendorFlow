@@ -25,3 +25,4 @@ VendorDoc/Demo Images/
 VendorDoc/*.md
 VendorDoc/*.txt
 !.env.example
+release/

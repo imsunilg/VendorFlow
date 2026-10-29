@@ -1,6 +1,6 @@
 # API specification
 
-Base URL `http://localhost:5080/api/v1` · Swagger UI `/swagger` · health `/health` · JSON camelCase · UTC timestamps.
+Base URL `http://localhost:5230/api/v1` · Swagger UI `/swagger` · health `/health` · JSON camelCase · UTC timestamps.
 
 **Auth:** `Authorization: Bearer <accessToken>` (15 min). `POST /auth/refresh` rotates the refresh token (14 days); re-using an old refresh token revokes all tokens of the user. The tenant comes from the token (`tid`), never from the client.
 

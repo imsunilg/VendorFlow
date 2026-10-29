@@ -36,7 +36,7 @@ public class UsersController(IDb db, ICurrentUser me, ITokenService tokens, IPas
         }, ct);
         if (mail.IsConfigured)
             await mail.SendAsync(req.Email, "You have been invited",
-                $"Set your password: {config["App:WebUrl"] ?? "http://localhost:4200"}/reset-password?token={token}", ct);
+                $"Set your password: {config["App:WebUrl"] ?? "http://localhost:4230"}/reset-password?token={token}", ct);
 
         return Ok(new { user = created, inviteToken = token });
     }

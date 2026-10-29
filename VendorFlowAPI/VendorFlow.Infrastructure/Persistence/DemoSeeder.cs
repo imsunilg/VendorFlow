@@ -15,7 +15,14 @@ public sealed class DemoSeeder(IDb db, IPasswordService passwords, ITokenService
     public async Task SeedAsync(string demoPassword, CancellationToken ct = default)
     {
         var existing = await db.JsonAsync("fn_auth_get_login", new { p_email = OwnerEmail }, ct);
-        if (existing is not null) return;
+        if (existing is not null)
+        {
+            // Older demo databases: add any demo account that is missing (one per remaining role).
+            var owner = Guid.Parse(existing["userId"]!.GetValue<string>());
+            var context = await db.JsonAsync("fn_auth_user_context", new { p_user_id = owner }, ct);
+            if (context is not null) await EnsureRoleUsers(Guid.Parse(context["tenantId"]!.GetValue<string>()), owner, demoPassword, ct);
+            return;
+        }
 
         var created = await db.JsonAsync("fn_register_organization", new
         {
@@ -35,9 +42,28 @@ public sealed class DemoSeeder(IDb db, IPasswordService passwords, ITokenService
         users["sneha"] = (await AddUser(tenant, priya, "sneha.i@democompany.in", "Sneha Iyer", ["FinanceManager"], demoPassword, ct)).ToString();
         users["anita"] = (await AddUser(tenant, priya, "anita.rao@democompany.in", "Anita Rao", ["DepartmentRequester"], demoPassword, ct)).ToString();
         users["suresh"] = (await AddUser(tenant, priya, "suresh.j@democompany.in", "Suresh Jadhav", ["WarehouseManager"], demoPassword, ct)).ToString();
+        await EnsureRoleUsers(tenant, priya, demoPassword, ct);
 
         await db.JsonAsync("fn_seed_demo_data", new { p_tenant_id = tenant, p_users = users }, ct);
         log.LogInformation("Demo data created for tenant Demo Company ({Email})", OwnerEmail);
+    }
+
+    // One demo login for every role that can be assigned to a user (the platform admin and vendor-portal roles cannot).
+    private async Task EnsureRoleUsers(Guid tenant, Guid actor, string password, CancellationToken ct)
+    {
+        (string Email, string Name, string Role)[] extra =
+        [
+            ("admin@democompany.in", "Alex Admin", "OrganizationAdministrator"),
+            ("officer@democompany.in", "Olivia Officer", "ProcurementOfficer"),
+            ("approver@democompany.in", "Arjun Approver", "Approver"),
+            ("ap@democompany.in", "Asha Payables", "AccountsPayableOfficer"),
+            ("auditor@democompany.in", "Avni Auditor", "Auditor")
+        ];
+        foreach (var (email, name, role) in extra)
+        {
+            var found = await db.JsonAsync("fn_auth_get_login", new { p_email = email }, ct);
+            if (found is null) await AddUser(tenant, actor, email, name, [role], password, ct);
+        }
     }
 
     private async Task<Guid> AddUser(Guid tenant, Guid actor, string email, string name, string[] roles, string password, CancellationToken ct)

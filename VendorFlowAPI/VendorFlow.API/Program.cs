@@ -61,7 +61,7 @@ builder.Services.AddRateLimiter(o =>
 });
 
 builder.Services.AddCors(o => o.AddDefaultPolicy(p => p
-    .WithOrigins((builder.Configuration["Cors:Origins"] ?? "http://localhost:4200").Split(',', StringSplitOptions.RemoveEmptyEntries))
+    .WithOrigins((builder.Configuration["Cors:Origins"] ?? "http://localhost:4230").Split(',', StringSplitOptions.RemoveEmptyEntries))
     .AllowAnyHeader().AllowAnyMethod()));
 
 builder.Services.AddEndpointsApiExplorer();
