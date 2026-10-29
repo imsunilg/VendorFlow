@@ -103,6 +103,15 @@ if (app.Configuration.GetValue("Database:AutoMigrate", true))
         .InitializeAsync(cs, app.Configuration.GetValue("Database:ResetTestDb", false));
 }
 
+// Development demo data (Demo Company with sample documents); never runs outside Development.
+if (app.Environment.IsDevelopment() && app.Configuration.GetValue("Seed:DemoData", false) && app.Configuration.GetValue("Database:AutoMigrate", true))
+{
+    using var scope = app.Services.CreateScope();
+    await new DemoSeeder(scope.ServiceProvider.GetRequiredService<IDb>(), scope.ServiceProvider.GetRequiredService<IPasswordService>(),
+        scope.ServiceProvider.GetRequiredService<ITokenService>(), scope.ServiceProvider.GetRequiredService<ILogger<DemoSeeder>>())
+        .SeedAsync(app.Configuration["Seed:DemoPassword"] ?? "Demo@12345");
+}
+
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseSerilogRequestLogging();
 app.UseCors();
