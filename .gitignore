@@ -24,3 +24,4 @@ VendorDoc/Demo Images/
 *.log
 VendorDoc/*.md
 VendorDoc/*.txt
+!.env.example

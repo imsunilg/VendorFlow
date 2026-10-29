@@ -1,0 +1,23 @@
+name: Web CI
+on:
+  push:
+    paths: ["VendorFlowWEB/**", ".github/workflows/web-ci.yml"]
+  pull_request:
+    paths: ["VendorFlowWEB/**"]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: VendorFlowWEB
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: VendorFlowWEB/package-lock.json
+      - run: npm ci
+      - run: npx ng test --watch=false
+      - run: npx ng build --configuration production

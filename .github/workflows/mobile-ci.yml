@@ -1,0 +1,22 @@
+name: Mobile CI
+on:
+  push:
+    paths: ["VendorFlowMOBILE/**", ".github/workflows/mobile-ci.yml"]
+  pull_request:
+    paths: ["VendorFlowMOBILE/**"]
+
+jobs:
+  analyze-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: VendorFlowMOBILE
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test

@@ -1,0 +1,55 @@
+# VendorFlow: PostgreSQL + API + web.  Usage:
+#   copy .env.example to .env and fill in the two secrets, then:  docker compose up --build
+# Nothing secret is stored in this file. The API creates database Vendor_db and its schema on first start.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: VendorFlowAPI/Dockerfile
+    environment:
+      ConnectionStrings__VendorFlow: Host=db;Port=5432;Database=Vendor_db;Username=postgres;Password=${POSTGRES_PASSWORD}
+      Jwt__Secret: ${JWT_SECRET:?Set JWT_SECRET in .env (32+ random characters)}
+      Jwt__Issuer: VendorFlow
+      Jwt__Audience: VendorFlowClients
+      Cors__Origins: ${WEB_ORIGIN:-http://localhost:8080}
+      App__WebUrl: ${WEB_ORIGIN:-http://localhost:8080}
+      Smtp__Host: ${SMTP_HOST:-}
+      Smtp__Port: ${SMTP_PORT:-587}
+      Smtp__User: ${SMTP_USER:-}
+      Smtp__Password: ${SMTP_PASSWORD:-}
+      Smtp__From: ${SMTP_FROM:-}
+    volumes:
+      - storage:/data/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5080:8080"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: VendorFlowWEB/Dockerfile
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  storage:

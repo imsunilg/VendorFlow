@@ -1,0 +1,31 @@
+name: API CI
+on:
+  push:
+    paths: ["VendorFlowAPI/**", "VendorFlowDB/**", ".github/workflows/api-ci.yml"]
+  pull_request:
+    paths: ["VendorFlowAPI/**", "VendorFlowDB/**"]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: ci-only-password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      # The tests create and drop their own database (Vendor_db_test) on this server.
+      ConnectionStrings__VendorFlow: Host=localhost;Port=5432;Database=Vendor_db;Username=postgres;Password=ci-only-password
+      Jwt__Secret: ci-only-secret-key-0123456789-abcdefghijklmnopqrstuvwxyz
+      Jwt__Issuer: VendorFlow
+      Jwt__Audience: VendorFlowClients
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - run: dotnet build VendorFlowAPI/VendorFlow.sln -c Release
+      - run: dotnet test VendorFlowAPI/VendorFlow.sln -c Release --no-build

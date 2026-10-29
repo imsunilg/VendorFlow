@@ -1,0 +1,16 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/.angular/
+**/.dart_tool/
+**/build/
+**/logs/
+**/storage/
+**/appsettings.Development.json
+.env
+.env.*
+!.env.example
+.git/
+VendorDoc/
+VendorFlowMOBILE/

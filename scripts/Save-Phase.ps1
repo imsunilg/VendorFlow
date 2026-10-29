@@ -19,7 +19,8 @@ git add -A
 $staged = git diff --cached --name-only
 if (-not $staged) { Write-Host 'Nothing to commit.'; exit 0 }
 
-$blockedNames = $staged | Where-Object { $_ -match 'appsettings\.Development\.json$|(^|/)\.env($|\.)|\.pfx$|\.key$' }
+# Placeholder files named *.example (for example .env.example) are allowed.
+$blockedNames = $staged | Where-Object { $_ -match 'appsettings\.Development\.json$|(^|/)\.env($|\.)|\.pfx$|\.key$' -and $_ -notmatch '\.example$' }
 if ($blockedNames) {
     git reset | Out-Null
     throw "Refusing to commit secret files: $($blockedNames -join ', ')"
