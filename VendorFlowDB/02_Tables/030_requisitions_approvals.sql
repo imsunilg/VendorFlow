@@ -65,6 +65,7 @@ create table vendorflow.approval_requests (
     title         text not null,
     amount        numeric(18,2) not null,
     requested_by  uuid not null,
+    department_id uuid,
     status        text not null default 'Pending' check (status in ('Pending','Approved','Rejected','Returned','Cancelled')),
     current_step  int not null default 1,
     total_steps   int not null,
