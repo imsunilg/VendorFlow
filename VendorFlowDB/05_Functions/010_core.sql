@@ -1,5 +1,9 @@
 -- Core helpers shared by all modules. Idempotent (create or replace).
 
+-- Health probe used by the /health endpoint.
+create or replace function vendorflow.fn_health()
+returns boolean language sql stable as $$ select true; $$;
+
 -- Builds the next document number for a tenant, e.g. PO-2026-0001, using the tenant's numbering pattern.
 create or replace function vendorflow.fn_next_number(p_tenant_id uuid, p_doc_type text)
 returns text language plpgsql as $$
