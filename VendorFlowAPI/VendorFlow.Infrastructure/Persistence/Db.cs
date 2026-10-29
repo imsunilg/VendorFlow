@@ -78,7 +78,8 @@ public sealed class Db(NpgsqlDataSource dataSource) : IDb
 
     private static readonly JsonSerializerOptions SnakeOptions = new()
     {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
     };
 
     private static JsonNode? ToCamel(JsonNode? node) => node switch
