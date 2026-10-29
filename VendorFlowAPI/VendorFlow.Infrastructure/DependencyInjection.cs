@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddSingleton<ITokenService, TokenService>();
         services.AddSingleton<IFileStorage, LocalFileStorage>();
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
+        services.AddSingleton<IPoPdfGenerator, VendorFlow.Infrastructure.Documents.PoPdfGenerator>();
         return services;
     }
 }

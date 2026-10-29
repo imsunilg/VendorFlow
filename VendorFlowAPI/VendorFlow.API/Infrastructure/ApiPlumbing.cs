@@ -92,7 +92,7 @@ public sealed class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionM
         PostgresException { SqlState: "VF403" } => (403, "Forbidden"),
         PostgresException { SqlState: "VF404" } => (404, "Not found"),
         PostgresException { SqlState: "VF409" } => (409, "Conflict"),
-        PostgresException { SqlState: "23505" } => (409, "Duplicate value"),
+        PostgresException { SqlState: "23505" or "23503" } => (409, "Conflict"),
         PostgresException { SqlState: "23514" or "22P02" or "22023" or "23502" } => (400, "Invalid data"),
         UnauthorizedAccessException => (401, "Unauthorized"),
         ArgumentException => (400, "Bad request"),

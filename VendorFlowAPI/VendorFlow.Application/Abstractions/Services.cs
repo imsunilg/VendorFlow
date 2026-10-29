@@ -39,3 +39,9 @@ public interface IEmailSender
     bool IsConfigured { get; }
     Task SendAsync(string to, string subject, string body, CancellationToken ct);
 }
+
+public interface IPoPdfGenerator
+{
+    /// <summary>Creates the purchase order PDF from the json returned by fn_po_pdf_data.</summary>
+    byte[] Generate(System.Text.Json.Nodes.JsonNode data);
+}
