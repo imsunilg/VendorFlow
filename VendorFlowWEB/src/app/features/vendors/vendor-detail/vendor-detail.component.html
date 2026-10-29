@@ -1,0 +1,246 @@
+<div class="page">
+  @if (loading) { <app-loading-spinner /> } @else if (vendor) {
+    <a routerLink="/vendors" class="back">‹ {{ 'Back to Vendors' | labels }}</a>
+
+    <div class="head">
+      <div class="avatar">{{ initials }}</div>
+      <div class="title">
+        <h1>{{ vendor.name }}</h1>
+        <div class="sub muted">
+          {{ vendor.category || 'Uncategorised' }}@if (vendor.city) { · {{ vendor.city }}@if (vendor.state) {, {{ vendor.state }} } } ·
+          {{ vendor.code }}
+        </div>
+        <div class="badges"><app-status-badge [status]="vendor.status" /> <app-status-badge [status]="vendor.risk" [label]="vendor.risk + ' risk'" /></div>
+      </div>
+      <div class="actions">
+        @if (vendor.status === 'Draft' || vendor.status === 'Rejected') {
+          @if (auth.has('vendors.edit')) { <button class="btn primary" (click)="act('submit', 'Submit for approval', false)">Submit for approval</button> }
+        }
+        @if (vendor.status === 'PendingApproval' && auth.has('vendors.approve')) {
+          <button class="btn green" (click)="act('approve', 'Approve', false)">Approve</button>
+          <button class="btn danger" (click)="act('reject', 'Reject', true)">Reject</button>
+        }
+        @if (vendor.status === 'Approved' && auth.has('vendors.suspend')) { <button class="btn" (click)="act('suspend', 'Suspend', true)">Suspend</button> }
+        @if (vendor.status === 'Suspended' && auth.has('vendors.suspend')) { <button class="btn" (click)="act('reactivate', 'Reactivate', false)">Reactivate</button> }
+        @if (editable) { <a class="btn primary" [routerLink]="['/vendors', vendor.id, 'edit']">Edit {{ 'Vendor' | labels }}</a> }
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button [class.active]="tab === 'profile'" (click)="open('profile')">Profile</button>
+      <button [class.active]="tab === 'contacts'" (click)="open('contacts')">Contacts</button>
+      <button [class.active]="tab === 'addresses'" (click)="open('addresses')">Addresses</button>
+      <button [class.active]="tab === 'documents'" (click)="open('documents')">Documents <span class="count">{{ vendor.documents.length }}</span></button>
+      @if (auth.has('vendors.bank.view')) { <button [class.active]="tab === 'bank'" (click)="open('bank')">Bank details</button> }
+      <button [class.active]="tab === 'performance'" (click)="open('performance')">Performance</button>
+      <button [class.active]="tab === 'history'" (click)="open('history')">History</button>
+    </div>
+
+    <!-- ===== Profile ===== -->
+    @if (tab === 'profile') {
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <h2>Company details</h2>
+            <dl class="facts">
+              <div><dt>GSTIN</dt><dd>{{ vendor.gstin || '—' }}</dd></div>
+              <div><dt>PAN</dt><dd>{{ vendor.pan || '—' }}</dd></div>
+              <div><dt>MSME / Udyam</dt><dd>{{ vendor.msmeNumber || '—' }}</dd></div>
+              <div><dt>Payment terms</dt><dd>Net {{ vendor.paymentTermsDays }} days</dd></div>
+              <div><dt>Currency</dt><dd>{{ vendor.currency }}</dd></div>
+              <div><dt>Onboarded</dt><dd>{{ vendor.onboardedAt | dateFormat }}</dd></div>
+              <div><dt>Email</dt><dd>{{ vendor.email || '—' }}</dd></div>
+              <div><dt>Phone</dt><dd>{{ vendor.phone || '—' }}</dd></div>
+              <div><dt>Rating</dt><dd>★ {{ vendor.rating }}</dd></div>
+            </dl>
+            @if (vendor.productsServices) { <p class="muted">{{ vendor.productsServices }}</p> }
+          </div>
+          <div class="card flush">
+            <div class="pad"><h2>Documents &amp; expiry</h2></div>
+            <table class="grid">
+              <thead><tr><th>Document</th><th>Number</th><th>Expiry</th><th>Status</th></tr></thead>
+              <tbody>
+                @for (d of vendor.documents; track d.id) {
+                  <tr><td>{{ d.docType }}</td><td>{{ d.docNumber || '—' }}</td><td>{{ d.expiryDate | dateFormat }}</td>
+                    <td><app-status-badge [status]="d.status" [label]="d.status === 'Expiring' ? d.daysLeft + ' days' : null" /></td></tr>
+                } @empty { <tr><td colspan="4" class="muted">No documents yet.</td></tr> }
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <h2>Primary contact</h2>
+            @if (primaryContact) {
+              <div class="contact"><div class="avatar sm">{{ primaryContact.name[0] }}</div><div><strong>{{ primaryContact.name }}</strong><div class="muted">{{ primaryContact.designation }}</div></div></div>
+              <div class="muted">✉ {{ primaryContact.email || '—' }}</div>
+              <div class="muted">☎ {{ primaryContact.phone || '—' }}</div>
+            } @else { <p class="muted">No contact added yet.</p> }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ===== Contacts ===== -->
+    @if (tab === 'contacts') {
+      <div class="card flush">
+        <table class="grid">
+          <thead><tr><th>Name</th><th>Designation</th><th>Email</th><th>Phone</th><th></th></tr></thead>
+          <tbody>
+            @for (c of vendor.contacts; track c.id) {
+              <tr><td>{{ c.name }} @if (c.isPrimary) { <app-status-badge status="Active" label="Primary" /> }</td><td>{{ c.designation || '—' }}</td><td>{{ c.email || '—' }}</td><td>{{ c.phone || '—' }}</td>
+                <td class="right">@if (auth.has('vendors.edit')) { <button class="btn" (click)="removeContact(c)">Remove</button> }</td></tr>
+            } @empty { <tr><td colspan="5" class="muted">No contacts yet.</td></tr> }
+          </tbody>
+        </table>
+      </div>
+      @if (auth.has('vendors.edit')) {
+        <form class="card" [formGroup]="contactForm" (ngSubmit)="addContact()">
+          <h2>Add contact</h2>
+          <div class="form-grid three">
+            <div class="field"><label>Name *</label><input formControlName="name" /></div>
+            <div class="field"><label>Designation</label><input formControlName="designation" /></div>
+            <div class="field"><label>Email</label><input formControlName="email" /></div>
+            <div class="field"><label>Phone</label><input formControlName="phone" /></div>
+            <div class="field"><label><input type="checkbox" formControlName="isPrimary" /> Primary contact</label></div>
+          </div>
+          <button class="btn primary" type="submit">Add contact</button>
+        </form>
+      }
+    }
+
+    <!-- ===== Addresses ===== -->
+    @if (tab === 'addresses') {
+      <div class="card flush">
+        <table class="grid">
+          <thead><tr><th>Type</th><th>Address</th><th>City / State</th><th>Postal code</th><th></th></tr></thead>
+          <tbody>
+            @for (a of vendor.addresses; track a.id) {
+              <tr><td>{{ a.addressType }}</td><td>{{ a.line1 }}{{ a.line2 ? ', ' + a.line2 : '' }}</td><td>{{ a.city }} {{ a.state }}</td><td>{{ a.postalCode || '—' }}</td>
+                <td class="right">@if (auth.has('vendors.edit')) { <button class="btn" (click)="removeAddress(a)">Remove</button> }</td></tr>
+            } @empty { <tr><td colspan="5" class="muted">No addresses yet.</td></tr> }
+          </tbody>
+        </table>
+      </div>
+      @if (auth.has('vendors.edit')) {
+        <form class="card" [formGroup]="addressForm" (ngSubmit)="addAddress()">
+          <h2>Add address</h2>
+          <div class="form-grid three">
+            <div class="field"><label>Type</label><select formControlName="addressType"><option>Registered</option><option>Billing</option><option>Shipping</option></select></div>
+            <div class="field"><label>Line 1 *</label><input formControlName="line1" /></div>
+            <div class="field"><label>Line 2</label><input formControlName="line2" /></div>
+            <div class="field"><label>City</label><input formControlName="city" /></div>
+            <div class="field"><label>State</label><input formControlName="state" /></div>
+            <div class="field"><label>Postal code</label><input formControlName="postalCode" /></div>
+          </div>
+          <button class="btn primary" type="submit">Add address</button>
+        </form>
+      }
+    }
+
+    <!-- ===== Documents ===== -->
+    @if (tab === 'documents') {
+      <div class="card flush">
+        <table class="grid">
+          <thead><tr><th>Document</th><th>Number</th><th>Expiry</th><th>Status</th><th>File</th><th></th></tr></thead>
+          <tbody>
+            @for (d of vendor.documents; track d.id) {
+              <tr>
+                <td>{{ d.docType }}</td><td>{{ d.docNumber || '—' }}</td><td>{{ d.expiryDate | dateFormat }}</td>
+                <td><app-status-badge [status]="d.status" [label]="d.status === 'Expiring' ? d.daysLeft + ' days' : null" /></td>
+                <td>@if (d.fileName) { <a href="javascript:void(0)" (click)="viewDocument(d)">{{ d.fileName }}</a> } @else { <span class="muted">—</span> }</td>
+                <td class="right">@if (auth.has('vendors.edit')) { <button class="btn" (click)="removeDocument(d)">Remove</button> }</td>
+              </tr>
+            } @empty { <tr><td colspan="6" class="muted">No documents yet.</td></tr> }
+          </tbody>
+        </table>
+      </div>
+      @if (auth.has('vendors.edit')) {
+        <form class="card" [formGroup]="documentForm" (ngSubmit)="addDocument()">
+          <h2>Add document</h2>
+          <div class="form-grid three">
+            <div class="field"><label>Type *</label><input formControlName="docType" placeholder="e.g. ISO 9001" /></div>
+            <div class="field"><label>Number</label><input formControlName="docNumber" /></div>
+            <div class="field"><label>Expiry date</label><input type="date" formControlName="expiryDate" /></div>
+          </div>
+          <app-file-upload (fileSelected)="newFile = $event" />
+          @if (newFile) { <p class="muted">Selected: {{ newFile.name }}</p> }
+          <button class="btn primary" type="submit">Save document</button>
+        </form>
+      }
+    }
+
+    <!-- ===== Bank details (restricted) ===== -->
+    @if (tab === 'bank') {
+      <div class="card">
+        <h2>Bank details</h2>
+        <div class="alert warn">Bank details are restricted. Every time they are shown or changed it is recorded in the audit trail.</div>
+        @if (!bankLoaded) {
+          <p>Account: {{ vendor.hasBankDetails ? 'on file' : 'not added yet' }}</p>
+          <button class="btn primary" (click)="revealBank()">Show bank details</button>
+        } @else {
+          @if (bank) {
+            <dl class="facts">
+              <div><dt>Account name</dt><dd>{{ bank.accountName }}</dd></div>
+              <div><dt>Account number</dt><dd>{{ bank.accountNumber }}</dd></div>
+              <div><dt>IFSC</dt><dd>{{ bank.ifsc }}</dd></div>
+              <div><dt>Bank</dt><dd>{{ bank.bankName || '—' }}</dd></div>
+              <div><dt>Branch</dt><dd>{{ bank.branch || '—' }}</dd></div>
+            </dl>
+          } @else { <p class="muted">No bank details added yet.</p> }
+
+          @if (auth.has('vendors.bank.manage')) {
+            <form [formGroup]="bankForm" (ngSubmit)="saveBank()" class="bank-form">
+              <h2>{{ bank ? 'Change' : 'Add' }} bank details</h2>
+              <div class="form-grid three">
+                <div class="field"><label>Account name *</label><input formControlName="accountName" /></div>
+                <div class="field"><label>Account number *</label><input formControlName="accountNumber" />
+                  @if (bankForm.controls.accountNumber.touched && bankForm.controls.accountNumber.invalid) { <span class="error">6 to 20 digits.</span> }</div>
+                <div class="field"><label>IFSC *</label><input formControlName="ifsc" />
+                  @if (bankForm.controls.ifsc.touched && bankForm.controls.ifsc.invalid) { <span class="error">Invalid IFSC code.</span> }</div>
+                <div class="field"><label>Bank</label><input formControlName="bankName" /></div>
+                <div class="field"><label>Branch</label><input formControlName="branch" /></div>
+              </div>
+              <button class="btn primary" type="submit">Save bank details</button>
+            </form>
+          }
+        }
+      </div>
+    }
+
+    <!-- ===== Performance ===== -->
+    @if (tab === 'performance') {
+      @if (!performance) { <app-loading-spinner /> } @else {
+        <div class="grid-2">
+          <div class="card">
+            <h2>Metrics</h2>
+            <table class="grid">
+              <thead><tr><th>Metric</th><th>Value</th><th>Weight</th><th>How it is calculated</th></tr></thead>
+              <tbody>
+                @for (m of performance.metrics; track m.key) {
+                  <tr><td>{{ m.label }}</td><td>{{ m.value === null ? 'No data yet' : m.value + '%' }}</td><td>{{ m.weight }}</td><td class="muted">{{ m.explanation }}</td></tr>
+                }
+              </tbody>
+            </table>
+            <p class="muted">{{ performance.note }}</p>
+          </div>
+          <div class="card score">
+            <h2>Performance score</h2>
+            @if (performance.score === null) { <div class="big muted">—</div><p class="muted">Not enough data yet. The score appears after receipts, invoices or quotations.</p> }
+            @else { <div class="big">{{ performance.score }}<small>/100</small></div> }
+          </div>
+        </div>
+      }
+    }
+
+    <!-- ===== History ===== -->
+    @if (tab === 'history') {
+      <div class="card">
+        @for (h of history; track $index) {
+          <div class="history-row"><strong>{{ h.action }}</strong><span class="muted">{{ h.fromStatus }} → {{ h.toStatus }}</span><span>{{ h.comment }}</span>
+            <span class="muted">{{ h.userName }} · {{ h.createdAt | dateFormat: true }}</span></div>
+        } @empty { <app-empty-state message="No history yet." /> }
+      </div>
+    }
+  }
+</div>

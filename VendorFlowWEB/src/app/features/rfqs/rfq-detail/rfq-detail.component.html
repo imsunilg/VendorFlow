@@ -1,0 +1,102 @@
+<div class="page">
+  @if (loading) { <app-loading-spinner /> } @else if (rfq) {
+    <a routerLink="/rfqs">‹ Back to RFQs</a>
+    <div class="page-head head">
+      <div>
+        <h1>{{ rfq.number }} · {{ rfq.title }}</h1>
+        <p>
+          @if (rfq.requisitionNumber) { Created from {{ rfq.requisitionNumber }} · }
+          <app-status-badge [status]="rfq.status" /> · Deadline {{ rfq.deadline | dateFormat: true }}
+          @if (rfq.isExpired) { <span class="bad">(passed)</span> }
+        </p>
+      </div>
+      <div class="actions">
+        @if (canManage && rfq.status === 'Draft') { <button class="btn primary" (click)="open()">Open RFQ &amp; invite {{ 'vendors' | labels }}</button> }
+        @if (canManage && rfq.status === 'Open') {
+          <button class="btn" (click)="remind()">Send reminder</button>
+          <button class="btn" (click)="close()">Close RFQ</button>
+        }
+        @if (auth.has('quotations.view') && rfq.quotationsCount > 0) { <a class="btn primary" [routerLink]="['/quotations', rfq.id]">Compare quotations</a> }
+        @if (auth.has('po.create') && rfq.recommendation && ['Open', 'Closed'].includes(rfq.status)) { <button class="btn green" (click)="createPo()">Create PO from recommendation</button> }
+        @if (canManage && ['Draft', 'Open', 'Closed'].includes(rfq.status)) { <button class="btn danger" (click)="cancel()">Cancel</button> }
+      </div>
+    </div>
+
+    @if (links.length) {
+      <div class="card links">
+        <h2>Invitation links (shown only once)</h2>
+        <p class="muted">Send each link to the {{ 'vendor' | labels }}. If an e-mail address is on file and SMTP is configured, it was also e-mailed.</p>
+        @for (l of links; track l.link) {
+          <div class="link-row"><strong>{{ l.vendorName }}</strong><input readonly [value]="l.link" /><button class="btn" (click)="copy(l.link)">Copy</button></div>
+        }
+      </div>
+    }
+
+    @if (rfq.status === 'Closed' && canManage) {
+      <div class="card"><div class="inline-form"><span>Need more time?</span><input type="datetime-local" [(ngModel)]="newDeadline" /><button class="btn" (click)="reopen()">Re-open with new deadline</button></div></div>
+    }
+
+    <div class="grid-2">
+      <div>
+        <div class="card flush">
+          <div class="pad"><h2>Invited {{ 'vendors' | labels }} &amp; responses</h2></div>
+          <table class="grid">
+            <thead><tr><th>{{ 'Vendor' | labels }}</th><th>Invited</th><th>Viewed</th><th class="right">Total (incl. tax)</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              @for (v of rfq.vendors; track v.vendorId) {
+                <tr>
+                  <td><a [routerLink]="['/vendors', v.vendorId]">{{ v.vendorName }}</a></td>
+                  <td>{{ v.invitedAt | dateFormat }}</td><td>{{ v.viewedAt | dateFormat }}</td>
+                  <td class="right money">{{ v.hasQuotation ? (v.totalLanded | money) : '—' }}</td>
+                  <td><app-status-badge [status]="v.status === 'Invited' && !v.hasInvitation ? 'Draft' : v.status" /></td>
+                  <td class="right">
+                    @if (canManage && rfq.status === 'Open') {
+                      <button class="btn" (click)="invite(v.vendorId, v.vendorName)">New link</button>
+                      <a class="btn" [routerLink]="['/rfqs', rfq.id, 'quote', v.vendorId]">Enter quotation</a>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card flush">
+          <div class="pad"><h2>Items</h2></div>
+          <table class="grid">
+            <thead><tr><th>#</th><th>Description</th><th>Unit</th><th class="right">Quantity</th></tr></thead>
+            <tbody>@for (i of rfq.items; track i.id) { <tr><td>{{ i.lineNo }}</td><td>{{ i.description }}</td><td>{{ i.unit }}</td><td class="right">{{ i.quantity }}</td></tr> }</tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h2>Clarifications</h2>
+          @for (c of rfq.clarifications; track c.id) {
+            <div class="clar">
+              <div><strong>{{ c.vendorName }}:</strong> {{ c.question }}</div>
+              @if (c.answer) { <div class="muted"><strong>You:</strong> {{ c.answer }}</div> }
+              @else if (canManage) {
+                <div class="inline-form"><input placeholder="Type your answer" [ngModel]="answers[c.id]" (ngModelChange)="answers[c.id] = $event" /><button class="btn" (click)="answer(c)">Answer</button></div>
+              }
+            </div>
+          } @empty { <p class="muted">No questions from vendors.</p> }
+          <p class="muted">Answers are visible only to the {{ 'vendor' | labels }} who asked.</p>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>Timeline</h2>
+          @for (h of rfq.history; track $index) {
+            <div class="tl"><strong>{{ h.createdAt | dateFormat }}</strong> {{ h.action.replace('_', ' ') }}@if (h.comment) { <span class="muted"> · {{ h.comment }}</span> }</div>
+          }
+        </div>
+        @if (rfq.recommendation) {
+          <div class="card rec"><h2>Recommendation</h2><strong>{{ rfq.recommendation.vendorName }}</strong><p class="muted">{{ rfq.recommendation.justification }}</p></div>
+        }
+        <div class="card"><h2>{{ 'Vendor' | labels }} privacy</h2><p class="muted">{{ 'Each vendor sees only their own quotation. Competing prices are never visible.' | labels }}</p></div>
+        <app-attachments-panel entityType="rfq" [entityId]="rfq.id" [canEdit]="canManage" />
+      </div>
+    </div>
+  }
+</div>

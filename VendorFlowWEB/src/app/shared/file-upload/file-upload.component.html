@@ -1,0 +1,7 @@
+<label class="drop" [class.dragging]="dragging" (dragover)="$event.preventDefault(); dragging = true" (dragleave)="dragging = false" (drop)="onDrop($event)">
+  <span class="material-icons-outlined">file_upload</span>
+  <span>Drag &amp; drop or <strong>browse</strong></span>
+  <small class="muted">{{ hint }}</small>
+  <input type="file" [accept]="accept" (change)="onBrowse($event)" hidden />
+</label>
+@if (error) { <div class="error-text">{{ error }}</div> }

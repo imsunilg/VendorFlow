@@ -1,0 +1,5 @@
+.stats { margin-bottom: 16px; }
+.value { font-size: 24px; font-weight: 700; margin: 4px 0; }
+.value.amber { color: var(--amber); }
+.value.green { color: var(--green); }
+.filters .search { width: 320px; max-width: 100%; }

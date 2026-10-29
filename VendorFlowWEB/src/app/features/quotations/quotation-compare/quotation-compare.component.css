@@ -1,0 +1,8 @@
+table.compare td:first-child { font-weight: 600; min-width: 260px; }
+table.compare td.best { background: #e0f6ea; }
+table.compare tr.strong td { font-weight: 700; }
+.bottom { margin-top: 16px; }
+.head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.head h2 { margin: 0; }
+.rec { border-color: #bcd0ff; background: #f8faff; }
+.note { font-size: 12px; margin-top: 12px; }

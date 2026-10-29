@@ -1,0 +1,52 @@
+<div class="portal">
+  <header><span class="logo material-icons-outlined">shopping_cart</span> {{ data?.organization || 'Request for quotation' }}</header>
+
+  <main>
+    @if (loading) { <app-loading-spinner /> }
+    @else if (invalidLink) { <div class="card"><h2>This link is invalid or has expired.</h2><p class="muted">Please contact the buyer for a new link.</p></div> }
+    @else if (data) {
+      <div class="card">
+        <h1>{{ data.rfq.title }}</h1>
+        <p class="muted">{{ data.rfq.number }} · requested by {{ data.organizationName }} · for {{ data.vendorName }}</p>
+        <p>Deadline: <strong>{{ data.rfq.deadline | dateFormat: true }}</strong>
+          @if (!data.rfq.accepting) { <span class="bad"> — this request is no longer accepting quotations</span> }</p>
+        @if (data.rfq.description) { <p>{{ data.rfq.description }}</p> }
+        <div class="alert info">Only you can see this page and your prices. Other vendors never see your quotation.</div>
+      </div>
+
+      <div class="card flush">
+        <table class="grid">
+          <thead><tr><th>#</th><th>Item</th><th>Unit</th><th class="right">Quantity</th></tr></thead>
+          <tbody>@for (i of data.items; track i.id) { <tr><td>{{ i.lineNo }}</td><td>{{ i.description }}</td><td>{{ i.unit }}</td><td class="right">{{ i.quantity }}</td></tr> }</tbody>
+        </table>
+      </div>
+
+      @if (data.participation === 'Declined') {
+        <div class="alert warn">You declined this request.</div>
+      } @else if (data.rfq.accepting) {
+        @if (data.quotation && !editing) {
+          <div class="card">
+            <h2>Your quotation</h2>
+            <p>Total landed cost: <strong>{{ data.quotation.totalLanded | money }}</strong> · submitted {{ data.quotation.submittedAt | dateFormat: true }}</p>
+            <button class="btn" (click)="editing = true">Change my quotation</button>
+          </div>
+        }
+        @if (editing) {
+          <h2>{{ data.quotation ? 'Update your quotation' : 'Your quotation' }}</h2>
+          <app-quotation-form [items]="data.items" [initial]="data.quotation" [busy]="saving" (submitQuote)="submit($event)" />
+        }
+        @if (!data.quotation) { <button class="btn danger decline" (click)="decline()">Decline to quote</button> }
+
+        <div class="card">
+          <h2>Questions</h2>
+          @for (c of data.clarifications; track c.askedAt) {
+            <div class="clar"><div><strong>You:</strong> {{ c.question }}</div>@if (c.answer) { <div class="muted"><strong>Buyer:</strong> {{ c.answer }}</div> } @else { <div class="muted">Waiting for an answer…</div> }</div>
+          }
+          <div class="ask"><input placeholder="Ask the buyer a question" [(ngModel)]="question" /><button class="btn" (click)="ask()">Send</button></div>
+        </div>
+      } @else if (data.quotation) {
+        <div class="card"><h2>Your submitted quotation</h2><p>Total landed cost: <strong>{{ data.quotation.totalLanded | money }}</strong></p></div>
+      }
+    }
+  </main>
+</div>

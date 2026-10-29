@@ -1,0 +1,42 @@
+<div class="page">
+  @if (loading) { <app-loading-spinner /> } @else if (grn) {
+    <a routerLink="/goods-receipts">‹ Back to goods receipts</a>
+    <div class="page-head head">
+      <div>
+        <h1>{{ grn.number }} <app-status-badge [status]="grn.status" /></h1>
+        <p>Against <a [routerLink]="['/purchase-orders', grn.poId]">{{ grn.poNumber }}</a> · {{ grn.vendorName }} · received {{ grn.receivedOn | dateFormat }}</p>
+      </div>
+      <div class="actions">
+        @if (grn.status === 'Posted' && auth.has('grn.record')) { <button class="btn danger" (click)="cancel()">Cancel receipt</button> }
+        @if (auth.has('invoices.create')) { <a class="btn" routerLink="/invoices/new" [queryParams]="{ poId: grn.poId }">Register invoice</a> }
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <div class="card">
+          <h2>Receipt details</h2>
+          <dl class="facts">
+            <div><dt>Warehouse</dt><dd>{{ grn.warehouse || '—' }}</dd></div>
+            <div><dt>Delivery challan</dt><dd>{{ grn.deliveryChallan || '—' }}</dd></div>
+            <div><dt>Vehicle no.</dt><dd>{{ grn.vehicleNo || '—' }}</dd></div>
+            <div><dt>Received by</dt><dd>{{ grn.receivedBy || '—' }}</dd></div>
+            <div><dt>Posted by</dt><dd>{{ grn.createdByName }}</dd></div>
+          </dl>
+          @if (grn.inspectionNotes) { <p class="muted">{{ grn.inspectionNotes }}</p> }
+        </div>
+        <div class="card flush">
+          <div class="pad"><h2>Quantities</h2></div>
+          <table class="grid">
+            <thead><tr><th>Item</th><th class="right">Ordered</th><th class="right">Received</th><th class="right">Accepted</th><th class="right">Rejected</th><th class="right">Damaged</th></tr></thead>
+            <tbody>@for (i of grn.items; track i.id) { <tr><td>{{ i.description }}</td><td class="right">{{ i.orderedQty }}</td><td class="right">{{ i.receivedQty }}</td><td class="right">{{ i.acceptedQty }}</td><td class="right">{{ i.rejectedQty }}</td><td class="right">{{ i.damagedQty }}</td></tr> }</tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <app-attachments-panel entityType="goods_receipt" [entityId]="grn.id" [canEdit]="auth.has('grn.record') && grn.status === 'Posted'" />
+        <div class="card"><h2>History</h2>@for (h of grn.history; track $index) { <div class="hist"><strong>{{ h.action }}</strong> <span class="muted">{{ h.userName }} · {{ h.createdAt | dateFormat: true }}</span></div> }</div>
+      </div>
+    </div>
+  }
+</div>

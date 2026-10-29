@@ -1,0 +1,53 @@
+<div class="page">
+  <app-page-header title="Reports" subtitle="Tenant-scoped analytics. Export any report as CSV.">
+    <input type="date" class="date" [(ngModel)]="from" title="From" />
+    <input type="date" class="date" [(ngModel)]="to" title="To" />
+    <button class="btn" (click)="run()">Apply</button>
+    <button class="btn" (click)="exportCsv()" [disabled]="!selected"><span class="material-icons-outlined">download</span> Export CSV</button>
+  </app-page-header>
+
+  <div class="grid-3 picker">
+    @for (r of catalog; track r.key) {
+      <button class="card report" [class.active]="selected?.key === r.key" (click)="select(r)">
+        <span class="material-icons-outlined">bar_chart</span>
+        <span><strong>{{ r.title | labels }}</strong><small class="muted">{{ r.description | labels }}</small></span>
+      </button>
+    }
+  </div>
+
+  @if (selected) {
+    <div class="card flush">
+      <div class="head">
+        <h2>{{ result?.title ?? selected.title | labels }}</h2>
+        @if (uses('groupBy')) {
+          <select [(ngModel)]="groupBy" (change)="run()"><option value="month">By month</option><option value="category">By category</option><option value="department">By department</option><option value="vendor">By {{ 'vendor' | labels }}</option></select>
+        }
+        @if (uses('days')) { <label class="muted">Within <input type="number" class="days" [(ngModel)]="days" (change)="run()" /> days</label> }
+      </div>
+
+      @if (loading) { <app-loading-spinner /> } @else if (result) {
+        <div class="table-scroll">
+          <table class="grid">
+            <thead><tr>@for (c of result.columns; track c.key) { <th [class.right]="c.type === 'money' || c.type === 'number' || c.type === 'percent'">{{ c.label | labels }}</th> }</tr></thead>
+            <tbody>
+              @for (row of result.rows; track $index) {
+                <tr>
+                  @for (c of result.columns; track c.key) {
+                    <td [class.right]="c.type === 'money' || c.type === 'number' || c.type === 'percent'">
+                      @if (c.type === 'money') { <span class="money">{{ row[c.key] | money }}</span> }
+                      @else if (c.type === 'percent') { {{ row[c.key] === null || row[c.key] === undefined ? '—' : row[c.key] + '%' }} }
+                      @else if (isStatus(c)) { <app-status-badge [status]="row[c.key]" /> }
+                      @else if (c.key === 'expiryDate') { {{ row[c.key] | dateFormat }} }
+                      @else { {{ row[c.key] ?? '—' }} }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (result.rows.length === 0) { <app-empty-state message="No data for this report and date range." /> }
+      }
+    </div>
+  }
+</div>

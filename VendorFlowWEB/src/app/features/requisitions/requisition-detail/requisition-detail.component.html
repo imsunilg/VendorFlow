@@ -1,0 +1,67 @@
+<div class="page">
+  @if (loading) { <app-loading-spinner /> } @else if (req) {
+    <a routerLink="/requisitions">‹ Back to requisitions</a>
+    <div class="page-head head">
+      <div>
+        <h1>{{ req.number }} · {{ req.title }}</h1>
+        <p><app-status-badge [status]="req.status" /> &nbsp; {{ req.departmentName }} · {{ req.costCentreCode }} · requested by {{ req.requesterName }}</p>
+      </div>
+      <div class="actions">
+        @if (editable) {
+          <a class="btn" [routerLink]="['/requisitions', req.id, 'edit']">Edit</a>
+          <button class="btn primary" (click)="submit()">Submit for approval</button>
+        }
+        @if (req.status === 'Approved' && auth.has('rfqs.manage')) { <a class="btn" routerLink="/rfqs/new" [queryParams]="{ requisitionId: req.id }">Create RFQ</a> }
+        @if (req.status === 'Approved' && auth.has('po.create')) { <a class="btn primary" routerLink="/purchase-orders/new" [queryParams]="{ requisitionId: req.id }">Create purchase order</a> }
+        @if (!['ConvertedToPO', 'Cancelled', 'Rejected'].includes(req.status) && (isRequester || auth.has('approvals.manage')) && auth.has('requisitions.create')) {
+          <button class="btn danger" (click)="cancel()">Cancel</button>
+        }
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <div class="card">
+          <h2>Details</h2>
+          <dl class="facts">
+            <div><dt>Required by</dt><dd>{{ req.requiredDate | dateFormat }}</dd></div>
+            <div><dt>Priority</dt><dd><app-status-badge [status]="req.priority" /></dd></div>
+            <div><dt>Estimated total</dt><dd>{{ req.totalAmount | money }}</dd></div>
+          </dl>
+          @if (req.justification) { <p class="muted">{{ req.justification }}</p> }
+        </div>
+
+        <div class="card flush">
+          <div class="pad"><h2>Line items</h2></div>
+          <table class="grid">
+            <thead><tr><th>#</th><th>Description</th><th>Unit</th><th class="right">Qty</th><th class="right">Est. unit price</th><th class="right">Total</th></tr></thead>
+            <tbody>
+              @for (i of req.items; track i.id) {
+                <tr><td>{{ i.lineNo }}</td><td>{{ i.description }}</td><td>{{ i.unit }}</td><td class="right">{{ i.quantity }}</td>
+                  <td class="right money">{{ i.estUnitPrice | money }}</td><td class="right money">{{ i.lineTotal | money }}</td></tr>
+              } @empty { <tr><td colspan="6" class="muted">No line items yet.</td></tr> }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h2>History</h2>
+          @for (h of req.history; track $index) {
+            <div class="history-row"><strong>{{ h.action }}</strong><span class="muted">{{ h.userName }} · {{ h.createdAt | dateFormat: true }}</span>@if (h.comment) { <span>“{{ h.comment }}”</span> }</div>
+          }
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>Approval route</h2>
+          @if (req.approval) {
+            <app-approval-timeline [steps]="req.approval.steps" />
+            @if (req.approval.status === 'Pending' && auth.has('approvals.view')) { <a routerLink="/approvals">Open the approvals inbox</a> }
+          } @else { <p class="muted">The route is created when the requisition is submitted.</p> }
+        </div>
+        <app-attachments-panel entityType="requisition" [entityId]="req.id" [canEdit]="editable" />
+      </div>
+    </div>
+  }
+</div>

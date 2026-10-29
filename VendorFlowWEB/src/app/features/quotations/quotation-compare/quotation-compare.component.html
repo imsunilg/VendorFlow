@@ -1,0 +1,58 @@
+<div class="page">
+  <app-page-header title="Quotation comparison" [subtitle]="data ? data.rfq.number + ' · ' + data.rfq.title : ''">
+    <a class="btn" [routerLink]="['/rfqs', rfqId]">Back to RFQ</a>
+    <button class="btn" (click)="exportCsv()"><span class="material-icons-outlined">download</span> Export</button>
+    @if (recommended && auth.has('po.create') && ['Open', 'Closed'].includes(data.rfq.status)) { <button class="btn green" (click)="createPo()">Create purchase order</button> }
+  </app-page-header>
+
+  @if (loading) { <app-loading-spinner /> } @else if (data) {
+    @if (quotes.length === 0) { <div class="card muted">No quotations have been received yet.</div> } @else {
+      <div class="card flush">
+        <div class="table-scroll">
+          <table class="grid compare">
+            <thead><tr><th>Criteria</th>@for (q of quotes; track q.vendorId) { <th>{{ q.vendorName }}</th> }</tr></thead>
+            <tbody>
+              @for (item of data.items; track item.id) {
+                <tr><td>{{ item.description }} — unit price ({{ item.quantity }} {{ item.unit }})</td>
+                  @for (q of quotes; track q.vendorId) { <td>{{ itemOf(q, item.id)?.unitPrice | money }}</td> }</tr>
+                <tr><td>Discount / tax %</td>
+                  @for (q of quotes; track q.vendorId) { <td>{{ itemOf(q, item.id)?.discountPercent }}% / {{ itemOf(q, item.id)?.taxPercent }}%</td> }</tr>
+              }
+              <tr><td>Discount total</td>@for (q of quotes; track q.vendorId) { <td>{{ q.discountTotal | money }}</td> }</tr>
+              <tr><td>Tax</td>@for (q of quotes; track q.vendorId) { <td>{{ q.taxTotal | money }}</td> }</tr>
+              <tr><td>Shipping</td>@for (q of quotes; track q.vendorId) { <td [class.best]="q.isLowestShipping">{{ q.shipping === 0 ? 'Free' : (q.shipping | money) }}</td> }</tr>
+              <tr class="strong"><td>Total landed cost</td>@for (q of quotes; track q.vendorId) { <td [class.best]="q.isLowestPrice">{{ q.totalLanded | money }}</td> }</tr>
+              <tr><td>Delivery time</td>@for (q of quotes; track q.vendorId) { <td [class.best]="q.isFastest">{{ q.deliveryDays !== null ? q.deliveryDays + ' days' : '—' }}</td> }</tr>
+              <tr><td>Payment terms</td>@for (q of quotes; track q.vendorId) { <td>{{ q.paymentTerms || '—' }}</td> }</tr>
+              <tr><td>Warranty</td>@for (q of quotes; track q.vendorId) { <td [class.best]="q.isBestWarranty">{{ q.warrantyMonths !== null ? q.warrantyMonths + ' months' : '—' }}</td> }</tr>
+              <tr><td>{{ 'Vendor' | labels }} score</td>@for (q of quotes; track q.vendorId) { <td [class.best]="q.isBestScore">{{ q.vendorScore !== null ? q.vendorScore + ' / 100' : 'No data yet' }}</td> }</tr>
+              <tr><td>Compliance docs</td>@for (q of quotes; track q.vendorId) { <td [class.bad]="q.compliance.includes('expired')">{{ q.compliance }}</td> }</tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid-2 bottom">
+        <div class="card">
+          <div class="head"><h2>Lowest price</h2><span class="badge green">{{ lowest?.totalLanded | money:0 }}</span></div>
+          <p class="muted"><strong>{{ lowest?.vendorName }}</strong> has the lowest landed cost. Check delivery time, payment terms, warranty and score before choosing.</p>
+        </div>
+
+        <div class="card rec">
+          <div class="head"><h2>Recommendation</h2><span class="badge indigo">Needs approval</span></div>
+          @if (recommended) {
+            <p><strong>{{ recommended.vendorName }}</strong> @if (!recommended.isLowestPrice) { <span class="badge amber">Not the lowest price</span> }</p>
+            <p class="muted">{{ recommended.justification }}</p>
+          }
+          @if (auth.has('quotations.recommend') && ['Open', 'Closed'].includes(data.rfq.status)) {
+            <div class="field"><label>Recommended {{ 'vendor' | labels }}</label>
+              <select [(ngModel)]="vendorId"><option value="">Choose…</option>@for (q of quotes; track q.vendorId) { <option [value]="q.vendorId">{{ q.vendorName }} — {{ q.totalLanded | money:0 }}</option> }</select></div>
+            <div class="field"><label>Justification (required)</label><textarea rows="3" [(ngModel)]="justification" placeholder="Why this vendor?"></textarea></div>
+            <button class="btn primary" (click)="recommend()">Record recommendation</button>
+          }
+          <p class="muted note">{{ data.note }}</p>
+        </div>
+      </div>
+    }
+  }
+</div>

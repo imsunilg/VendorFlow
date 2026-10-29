@@ -1,0 +1,12 @@
+<div class="card">
+  <h2>Attachments</h2>
+  @if (canEdit) { <app-file-upload (fileSelected)="upload($event)" /> }
+  @for (f of files; track f.id) {
+    <div class="file">
+      <span class="material-icons-outlined">description</span>
+      <a href="javascript:void(0)" (click)="open(f)">{{ f.fileName }}</a>
+      <span class="muted">{{ size(f.sizeBytes) }}</span>
+      @if (canEdit) { <button class="x" (click)="remove(f)" aria-label="Remove"><span class="material-icons-outlined">close</span></button> }
+    </div>
+  } @empty { <p class="muted">No files attached.</p> }
+</div>

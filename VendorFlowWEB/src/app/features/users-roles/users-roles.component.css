@@ -1,0 +1,9 @@
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.chip { display: inline-flex; gap: 6px; align-items: center; border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.role { background: var(--primary-soft); color: var(--primary); border-radius: 8px; padding: 2px 8px; font-size: 12px; font-weight: 600; margin-right: 6px; display: inline-block; }
+.filters .search { width: 300px; max-width: 100%; }
+.center { text-align: center; }
+.matrix th { min-width: 100px; }
+.matrix td:first-child { font-weight: 500; white-space: nowrap; }
+.link { display: flex; gap: 10px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+.link input { flex: 1; min-width: 260px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; }

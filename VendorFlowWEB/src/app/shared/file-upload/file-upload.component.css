@@ -1,0 +1,4 @@
+.drop { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 18px; border: 2px dashed #c9cff0; border-radius: 12px; cursor: pointer; color: var(--muted); }
+.drop strong { color: var(--primary); }
+.drop.dragging { background: var(--primary-soft); border-color: var(--primary); }
+.drop .material-icons-outlined { font-size: 26px; }

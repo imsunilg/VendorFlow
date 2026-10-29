@@ -1,0 +1,19 @@
+/* Split layout shared by all public auth pages (login, register, forgot/reset password). */
+.auth-page { display: grid; grid-template-columns: 1.1fr 1fr; min-height: 100vh; }
+.hero { background: linear-gradient(160deg, #111d4b 0%, #1d2b78 55%, #283b9a 100%); color: #fff; padding: 40px 48px; display: flex; flex-direction: column; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 700; }
+.logo { background: #5a6cf0; border-radius: 10px; padding: 8px; font-size: 20px; }
+.hero h1 { font-size: 40px; line-height: 1.15; max-width: 620px; margin-bottom: 20px; }
+.hero ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; color: #d8defa; font-size: 16px; }
+.hero li { display: flex; align-items: center; gap: 12px; }
+.hero li .material-icons-outlined { color: #4be0a0; }
+.hero small { color: #9fb0ee; }
+.panel { display: grid; place-items: center; background: #fff; padding: 24px; }
+.box { width: min(420px, 100%); }
+.box h2 { font-size: 28px; margin: 0; }
+.box > p.muted { margin: 4px 0 22px; font-size: 16px; }
+.row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.check { display: flex; align-items: center; gap: 8px; }
+.wide { width: 100%; justify-content: center; padding: 13px; }
+.foot { text-align: center; margin-top: 20px; }
+@media (max-width: 900px) { .auth-page { grid-template-columns: 1fr; } .hero { display: none; } }

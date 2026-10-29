@@ -1,0 +1,75 @@
+<div class="page">
+  @if (loading) { <app-loading-spinner /> } @else if (inv) {
+    <a routerLink="/invoices">‹ Back to invoices</a>
+    <div class="page-head head">
+      <div>
+        <h1>Invoice {{ inv.invoiceNumber }} <app-status-badge [status]="inv.status" /></h1>
+        <p>{{ inv.vendorName }} · <a [routerLink]="['/purchase-orders', inv.poId]">{{ inv.poNumber }}</a> · {{ inv.matchType === 'ThreeWay' ? '3-way' : '2-way' }} match · Due {{ inv.dueDate | dateFormat }}
+          @if (inv.isOverdue) { <span class="bad">({{ inv.daysOverdue }} days overdue)</span> }</p>
+      </div>
+      <div class="actions">
+        @if (editable && auth.has('invoices.create')) { <a class="btn" [routerLink]="['/invoices', inv.id, 'edit']">Correct invoice</a> }
+        @if (editable && inv.status !== 'Disputed' && auth.has('invoices.reconcile')) {
+          <button class="btn" (click)="dispute()">Raise discrepancy</button>
+          <button class="btn" (click)="rematch()">Match again</button>
+        }
+        @if (inv.status === 'Matched' && auth.has('invoices.reconcile')) { <button class="btn primary" (click)="reconcile()">Mark reconciled</button> }
+        @if (['Approved', 'PartiallyPaid'].includes(inv.status) && auth.has('payments.record')) { <a class="btn primary" routerLink="/payments" [queryParams]="{ invoiceId: inv.id }">Record payment</a> }
+        @if (inv.status !== 'Cancelled' && inv.paidAmount === 0 && auth.has('invoices.create')) { <button class="btn danger" (click)="cancel()">Cancel</button> }
+      </div>
+    </div>
+
+    <div class="grid-4">
+      <div class="card"><div class="label muted">Invoice total</div><div class="big">{{ inv.total | money }}</div></div>
+      <div class="card"><div class="label muted">Receipt value</div><div class="big">{{ inv.receiptValue === null ? '—' : (inv.receiptValue | money) }}</div></div>
+      <div class="card"><div class="label muted">Tolerance</div><div class="big">± {{ inv.tolerancePct }}%</div></div>
+      <div class="card" [class.variance-bad]="overTolerance"><div class="label muted">Variance</div>
+        <div class="big" [class.bad]="overTolerance">{{ inv.varianceAmount === null ? '—' : (inv.varianceAmount >= 0 ? '+ ' : '− ') + (absVariance | money) }} ({{ round2(inv.variancePct) }}%)</div></div>
+    </div>
+
+    <div class="card flush">
+      <div class="pad"><h2>Matching checks</h2></div>
+      <div class="table-scroll">
+        <table class="grid">
+          <thead><tr><th>Check</th><th>Purchase order</th><th>Goods receipt</th><th>Invoice</th><th>Result</th></tr></thead>
+          <tbody>
+            @for (l of inv.lines; track l.id) {
+              <tr><td><strong>{{ l.description }}</strong> — qty</td><td>{{ l.poQty }}</td><td>{{ inv.matchType === 'ThreeWay' ? l.grnQty : '—' }}@if (l.previouslyInvoicedQty > 0) { <small class="muted"> ({{ l.previouslyInvoicedQty }} invoiced before)</small> }</td><td>{{ l.invoiceQty }}</td>
+                <td><app-status-badge [status]="l.qtyOk ? 'Match' : 'Mismatch'" /></td></tr>
+              <tr><td><strong>{{ l.description }}</strong> — rate / discount</td><td class="money">{{ l.poRate | money }} / {{ l.poDiscountPercent }}%</td><td>—</td><td class="money">{{ l.invoiceRate | money }} / {{ l.invoiceDiscountPercent }}%</td>
+                <td><app-status-badge [status]="l.rateOk ? 'Match' : 'Mismatch'" /></td></tr>
+              <tr><td><strong>{{ l.description }}</strong> — GST amount</td><td class="money">{{ l.expectedTax | money }}</td><td>—</td><td class="money">{{ l.invoiceTax | money }}</td>
+                <td><app-status-badge [status]="l.taxOk ? 'Match' : 'Mismatch'" /></td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h2>Discrepancies ({{ inv.discrepancies.length }})</h2>
+        @for (d of inv.discrepancies; track d.id) { <div class="disc">• {{ d.message }}@if (d.raisedManually) { <span class="muted"> (raised manually)</span> }</div> }
+        @empty { <p class="muted">No discrepancies. Every mandatory check passed.</p> }
+        @if (inv.status === 'NeedsReview') { <div class="alert warn">Reconciliation is blocked until the mandatory checks pass. Correct the invoice or raise a discrepancy with the vendor.</div> }
+      </div>
+      <div class="card">
+        <h2>Duplicate check</h2>
+        @if (inv.duplicateCheck.duplicateFound) { <app-status-badge status="Mismatch" label="Duplicate found" /> } @else { <app-status-badge status="Match" label="No duplicate found" /> }
+        <p class="muted">Checked on {{ inv.duplicateCheck.basis }}.</p>
+        @if (inv.payments.length) {
+          <h2 class="top">Payments</h2>
+          @for (p of inv.payments; track p.id) { <div>{{ p.number }} · {{ p.amount | money }} · {{ p.method }} · {{ p.paidOn | dateFormat }}</div> }
+          <div class="muted">Paid {{ inv.paidAmount | money }} · balance {{ inv.balance | money }}</div>
+        }
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card"><h2>History</h2>
+        @for (h of inv.history; track $index) { <div class="hist"><strong>{{ h.action.replace('_', ' ') }}</strong> <span class="muted">{{ h.userName }} · {{ h.createdAt | dateFormat: true }}</span>@if (h.comment) { <span> · “{{ h.comment }}”</span> }</div> }
+      </div>
+      <app-attachments-panel entityType="invoice" [entityId]="inv.id" [canEdit]="auth.has('invoices.create')" />
+    </div>
+  }
+</div>

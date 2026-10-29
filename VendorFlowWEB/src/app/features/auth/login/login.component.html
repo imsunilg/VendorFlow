@@ -1,0 +1,43 @@
+<div class="auth-page">
+  <aside class="hero">
+    <div class="brand"><span class="logo material-icons-outlined">shopping_cart</span> VendorFlow</div>
+    <div>
+      <h1>Procurement, from request to payment — in one place.</h1>
+      <ul>
+        <li><span class="material-icons-outlined">check</span> Approvals with multi-level routing</li>
+        <li><span class="material-icons-outlined">check</span> Compare quotations side by side</li>
+        <li><span class="material-icons-outlined">check</span> 3-way match: PO · Receipt · Invoice</li>
+        <li><span class="material-icons-outlined">check</span> Rename “Vendors” to suit your business</li>
+      </ul>
+    </div>
+    <small>© 2026 VendorFlow · Multi-tenant SaaS</small>
+  </aside>
+
+  <main class="panel">
+    <form [formGroup]="form" (ngSubmit)="submit()" class="box">
+      <h2>Welcome back</h2>
+      <p class="muted">Sign in to your organization workspace</p>
+
+      @if (errorMessage) { <div class="alert error">{{ errorMessage }}</div> }
+
+      <div class="field">
+        <label for="email">Work email</label>
+        <input id="email" type="email" formControlName="email" autocomplete="username" />
+        @if (form.controls.email.touched && form.controls.email.invalid) { <span class="error">Enter a valid email address.</span> }
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" type="password" formControlName="password" autocomplete="current-password" />
+        @if (form.controls.password.touched && form.controls.password.invalid) { <span class="error">Password is required.</span> }
+      </div>
+
+      <div class="row">
+        <label class="check"><input type="checkbox" formControlName="remember" /> Remember me</label>
+        <a routerLink="/forgot-password">Forgot password?</a>
+      </div>
+
+      <button class="btn primary wide" type="submit" [disabled]="busy">{{ busy ? 'Signing in…' : 'Sign in' }}</button>
+      <p class="foot muted">New business? <a routerLink="/register">Register your organization</a></p>
+    </form>
+  </main>
+</div>

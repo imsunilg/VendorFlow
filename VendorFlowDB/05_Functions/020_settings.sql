@@ -113,3 +113,12 @@ returns jsonb language sql stable as $$
         order by c.code), '[]'::jsonb)
     from vendorflow.cost_centres c where c.tenant_id = p_tenant_id;
 $$;
+
+-- Active colleagues for pickers (delegation, department manager). Tenant scoped; no sensitive data.
+create or replace function vendorflow.fn_lookup_users(p_tenant_id uuid)
+returns jsonb language sql stable as $$
+    select coalesce(jsonb_agg(jsonb_build_object('id', u.id, 'full_name', u.full_name,
+        'roles', coalesce((select jsonb_agg(r.code order by r.code) from vendorflow.user_roles ur join vendorflow.roles r on r.id = ur.role_id
+                           where ur.user_id = u.id), '[]'::jsonb)) order by u.full_name), '[]'::jsonb)
+    from vendorflow.users u where u.tenant_id = p_tenant_id and u.status = 'Active';
+$$;

@@ -1,0 +1,7 @@
+<div class="page-head">
+  <div>
+    <h1>{{ title | labels }}</h1>
+    @if (subtitle) { <p>{{ subtitle | labels }}</p> }
+  </div>
+  <div class="actions"><ng-content /></div>
+</div>

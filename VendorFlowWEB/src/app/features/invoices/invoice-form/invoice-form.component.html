@@ -1,0 +1,61 @@
+<div class="page">
+  <app-page-header [title]="id ? 'Correct invoice' : 'Register invoice'" subtitle="The invoice is matched with the purchase order and the accepted goods receipts as soon as it is saved.">
+    <button class="btn primary" (click)="save()" [disabled]="saving">{{ id ? 'Save and match again' : 'Register and match' }}</button>
+  </app-page-header>
+
+  @if (loading) { <app-loading-spinner /> } @else {
+    <form [formGroup]="form" class="form">
+      <div class="card">
+        <h2>Invoice details</h2>
+        <div class="form-grid three">
+          <div class="field">
+            <label>Purchase order *</label>
+            <select formControlName="poId" (change)="onPoChange($any($event.target).value)">
+              <option value="">Select…</option>
+              @for (p of poOptions; track p.id) { <option [value]="p.id">{{ p.number }} · {{ p.vendorName }}</option> }
+            </select>
+            @if (invalid('poId')) { <span class="error">Choose a purchase order.</span> }
+          </div>
+          <div class="field">
+            <label>Invoice number *</label>
+            <input formControlName="invoiceNumber" />
+            @if (invalid('invoiceNumber')) { <span class="error">Invoice number is required.</span> }
+          </div>
+          <div class="field"><label>Matching</label>
+            <select formControlName="matchType"><option value="ThreeWay">3-way (PO · receipt · invoice)</option><option value="TwoWay">2-way (PO · invoice)</option></select></div>
+          <div class="field"><label>Invoice date *</label><input type="date" formControlName="invoiceDate" [max]="today" /></div>
+          <div class="field"><label>Due date</label><input type="date" formControlName="dueDate" /><small class="muted">Empty = invoice date + vendor payment terms</small></div>
+          <div class="field"><label>Notes</label><input formControlName="notes" /></div>
+        </div>
+      </div>
+
+      @if (po) {
+        <div class="card flush">
+          <div class="pad"><h2>Invoice lines for {{ po.number }}</h2></div>
+          <div class="table-scroll">
+            <table class="grid" formArrayName="lines">
+              <thead><tr><th></th><th>Item</th><th class="right">Ordered</th><th class="right">Received</th><th class="right">Already invoiced</th><th class="right">Invoice qty</th><th class="right">Rate</th><th class="right">Disc %</th><th class="right">Tax amount</th></tr></thead>
+              <tbody>
+                @for (g of lines.controls; track $index; let i = $index) {
+                  <tr [formGroupName]="i">
+                    <td><input type="checkbox" formControlName="include" /></td>
+                    <td>{{ po.items[i].description }}</td>
+                    <td class="right">{{ po.items[i].quantity }}</td>
+                    <td class="right">{{ po.items[i].receivedQty }}</td>
+                    <td class="right">{{ po.items[i].invoicedQty }}</td>
+                    <td><input class="n" type="number" formControlName="quantity" /></td>
+                    <td><input class="n" type="number" step="0.01" formControlName="rate" /></td>
+                    <td><input class="n s" type="number" step="0.01" formControlName="discountPercent" /></td>
+                    <td><input class="n" type="number" step="0.01" formControlName="taxAmount" placeholder="auto" /></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="alert info">Leave tax empty to use the PO tax rate. If your invoice shows a different tax amount, type it in: differences are reported as discrepancies.</div>
+      }
+      <a class="btn" [routerLink]="id ? ['/invoices', id] : ['/invoices']">Cancel</a>
+    </form>
+  }
+</div>

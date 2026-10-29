@@ -1,0 +1,11 @@
+<div class="page">
+  <app-page-header title="Goods Receipts" subtitle="Goods received against purchase orders. Record a new receipt from an issued PO." />
+  <div class="filters">
+    <input class="search" placeholder="Search GRN or PO number..." [value]="query.search" (input)="setSearch($any($event.target).value)" (keyup.enter)="search()" />
+    <button class="btn" (click)="search()">Search</button>
+  </div>
+  <div class="card flush">
+    <app-data-table [columns]="columns" [rows]="rows" [totalCount]="total" [page]="query.page" [pageSize]="query.pageSize" [loading]="loading"
+      linkTemplate="/goods-receipts/:id" emptyText="No goods receipts yet." (pageChange)="onPage($event)" />
+  </div>
+</div>

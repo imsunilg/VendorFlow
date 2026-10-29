@@ -1,0 +1,115 @@
+<div class="page">
+  <app-page-header [title]="greeting + ', ' + firstName + ' 👋'" subtitle="Here is what is happening in your procurement today.">
+    @if (auth.has('requisitions.create')) { <a class="btn primary" routerLink="/requisitions/new"><span class="material-icons-outlined">add</span> New Requisition</a> }
+  </app-page-header>
+
+  @if (!canSeeReports) {
+    <div class="card">
+      <app-empty-state icon="waving_hand" message="Welcome! Use the menu on the left to open your requisitions and approvals." />
+    </div>
+  } @else if (loading) {
+    <app-loading-spinner />
+  } @else if (data) {
+    <div class="grid-4">
+      <div class="card kpi">
+        <div class="icon"><span class="material-icons-outlined">credit_card</span></div>
+        <div>
+          <div class="label">Total procurement ({{ data.fiscalYear }})</div>
+          <div class="value">{{ data.kpis.totalProcurement.value | moneyShort }}</div>
+          @if (data.kpis.totalProcurement.changePct !== null) {
+            <div class="sub" [class.up]="data.kpis.totalProcurement.changePct >= 0" [class.down]="data.kpis.totalProcurement.changePct < 0">
+              {{ data.kpis.totalProcurement.changePct >= 0 ? '▲' : '▼' }} {{ data.kpis.totalProcurement.changePct }}% vs last year
+            </div>
+          } @else { <div class="sub muted">No previous year yet</div> }
+        </div>
+      </div>
+      <a class="card kpi link" routerLink="/approvals">
+        <div class="icon amber"><span class="material-icons-outlined">schedule</span></div>
+        <div>
+          <div class="label">Pending approvals</div>
+          <div class="value">{{ data.kpis.pendingApprovals.count }}</div>
+          <div class="sub" [class.down]="data.kpis.pendingApprovals.olderThan2Days > 0" [class.muted]="data.kpis.pendingApprovals.olderThan2Days === 0">
+            {{ data.kpis.pendingApprovals.olderThan2Days }} older than 2 days
+          </div>
+        </div>
+      </a>
+      <a class="card kpi link" routerLink="/rfqs">
+        <div class="icon blue"><span class="material-icons-outlined">forum</span></div>
+        <div>
+          <div class="label">Open RFQs</div>
+          <div class="value">{{ data.kpis.openRfqs.count }}</div>
+          <div class="sub up">▲ {{ data.kpis.openRfqs.newThisWeek }} this week</div>
+        </div>
+      </a>
+      <a class="card kpi link" routerLink="/payments">
+        <div class="icon red"><span class="material-icons-outlined">warning_amber</span></div>
+        <div>
+          <div class="label">Outstanding payments</div>
+          <div class="value">{{ data.kpis.outstandingPayments.amount | moneyShort }}</div>
+          <div class="sub down">{{ data.kpis.outstandingPayments.overdueCount }} invoices overdue</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><h2>Monthly procurement trend</h2><span class="chip">{{ data.fiscalYear }}</span></div>
+        @if (data.monthlyTrend.length === 0 || data.kpis.totalProcurement.value === 0) {
+          <app-empty-state icon="bar_chart" message="Spend appears here once purchase orders are approved." />
+        } @else {
+          <div class="bars">
+            @for (m of data.monthlyTrend; track m.month + m.year) {
+              <div class="bar-col">
+                <span class="bar-value">{{ m.amount | moneyShort }}</span>
+                <div class="bar" [style.height.%]="barHeight(m.amount)"></div>
+                <span class="bar-label">{{ m.month }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="card">
+        <h2>Spend by department</h2>
+        @for (d of data.spendByDepartment; track d.name; let i = $index) {
+          <div class="dept">
+            <div class="dept-row"><span>{{ d.name }}</span><strong>{{ d.pct }}%</strong></div>
+            <div class="progress"><span [style.width.%]="d.pct" [style.background]="barColors[i % barColors.length]"></span></div>
+          </div>
+        } @empty { <p class="muted">No spend yet.</p> }
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card flush">
+        <div class="pad"><h2>Needs your attention</h2></div>
+        <div class="table-scroll">
+          <table class="grid">
+            <thead><tr><th>Document</th><th>Description</th><th>Dept</th><th class="right">Amount</th><th>Status</th></tr></thead>
+            <tbody>
+              @for (a of data.attention; track a.entityId) {
+                <tr>
+                  <td><a [routerLink]="open(a)">{{ a.document }}</a></td>
+                  <td>{{ a.description | labels }}</td>
+                  <td>{{ a.department || '—' }}</td>
+                  <td class="right money">{{ a.amount | money:0 }}</td>
+                  <td><app-status-badge [status]="a.status" /></td>
+                </tr>
+              } @empty { <tr><td colspan="5" class="muted">Nothing needs attention right now.</td></tr> }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>{{ 'Vendor document expiry' | labels }}</h2>
+        @for (d of data.expiringDocuments; track d.docType + d.vendorName) {
+          <div class="doc-row">
+            <app-status-badge [status]="d.status" [label]="d.status === 'Expired' ? 'Expired' : d.status === 'Expiring' ? d.daysLeft + ' days' : 'Valid'" />
+            <span class="muted">{{ d.docType }} — {{ d.vendorName }}</span>
+          </div>
+        } @empty { <p class="muted">No documents with an expiry date yet.</p> }
+      </div>
+    </div>
+  }
+</div>

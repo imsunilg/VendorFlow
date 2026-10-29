@@ -1,0 +1,8 @@
+.form { max-width: 1200px; }
+.head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px 6px; }
+.head h2 { margin: 0; }
+input.inline { padding: 8px 10px; }
+input.narrow { width: 80px; }
+input.mid { width: 120px; }
+.x { background: none; border: 0; cursor: pointer; color: var(--muted); }
+tfoot td { background: #f8f9fd; }

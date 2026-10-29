@@ -1,0 +1,54 @@
+<div class="page">
+  <app-page-header title="Payments" subtitle="Record payments against invoices. Real bank transfers are not initiated by the system." />
+
+  <div class="grid-4 stats">
+    <div class="card kpi"><div class="icon green"><span class="material-icons-outlined">credit_card</span></div><div><div class="label">Paid this month</div><div class="value">{{ summary.paidThisMonth ?? 0 | money:0 }}</div></div></div>
+    <div class="card kpi"><div class="icon amber"><span class="material-icons-outlined">schedule</span></div><div><div class="label">Outstanding</div><div class="value">{{ summary.outstanding ?? 0 | money:0 }}</div><div class="sub muted">{{ summary.outstandingCount ?? 0 }} invoices</div></div></div>
+    <div class="card kpi"><div class="icon red"><span class="material-icons-outlined">warning_amber</span></div><div><div class="label">Overdue invoices</div><div class="value">{{ summary.overdueCount ?? 0 }}</div><div class="sub bad">{{ summary.overdueAmount ?? 0 | money:0 }} overdue</div></div></div>
+    <div class="card kpi"><div class="icon blue"><span class="material-icons-outlined">receipt_long</span></div><div><div class="label">Due in 7 days</div><div class="value">{{ summary.dueIn7Days ?? 0 }}</div></div></div>
+  </div>
+
+  <div class="tabs">
+    <button [class.active]="tab === 'payments'" (click)="setTab('payments')">Payments</button>
+    <button [class.active]="tab === 'outstanding'" (click)="setTab('outstanding')">Outstanding invoices <span class="count">{{ summary.outstandingCount ?? 0 }}</span></button>
+    <button [class.active]="tab === 'overdue'" (click)="setTab('overdue')">Overdue <span class="count">{{ summary.overdueCount ?? 0 }}</span></button>
+  </div>
+
+  <div class="card flush">
+    @if (tab === 'payments') {
+      <app-data-table [columns]="paymentColumns" [rows]="rows" [totalCount]="total" [page]="page" [pageSize]="10" [loading]="loading"
+        linkTemplate="/invoices/:id" emptyText="No payments recorded yet." (pageChange)="onPage($event)" />
+    } @else {
+      <app-data-table [columns]="invoiceColumns" [rows]="rows" [totalCount]="total" [page]="page" [pageSize]="10" [loading]="loading"
+        linkTemplate="/invoices/:id" emptyText="Nothing outstanding." (pageChange)="onPage($event)" />
+    }
+  </div>
+
+  @if (auth.has('payments.record')) {
+    <form class="card pay" [formGroup]="form" (ngSubmit)="record()">
+      <h2>Record payment</h2>
+      <div class="form-grid">
+        <div class="field">
+          <label>Invoice *</label>
+          <select formControlName="invoiceId" (change)="pickInvoice($any($event.target).value)">
+            <option value="">Select an invoice…</option>
+            @for (i of outstanding; track i.id) { <option [value]="i.id">{{ i.invoiceNumber }} · {{ i.vendorName }} · balance {{ i.balance | money }}</option> }
+          </select>
+        </div>
+        <div class="field">
+          <label>Amount *</label>
+          <input type="number" step="0.01" formControlName="amount" />
+          @if (selected) { <small class="muted">Balance {{ selected.balance | money }} — overpayment is not allowed</small> }
+        </div>
+        <div class="field">
+          <label>Method *</label>
+          <select formControlName="method"><option>NEFT</option><option>RTGS</option><option>UPI</option><option>IMPS</option><option>Cheque</option><option>Cash</option><option>Other</option></select>
+        </div>
+        <div class="field"><label>Reference</label><input formControlName="reference" placeholder="UTR / cheque no." /></div>
+        <div class="field"><label>Paid on *</label><input type="date" formControlName="paidOn" [max]="form.value.paidOn" /></div>
+      </div>
+      <p class="muted small">Duplicate submissions are blocked using an idempotency key. Overpayment is not allowed.</p>
+      <button class="btn primary" type="submit" [disabled]="busy">{{ busy ? 'Recording…' : 'Record payment' }}</button>
+    </form>
+  }
+</div>

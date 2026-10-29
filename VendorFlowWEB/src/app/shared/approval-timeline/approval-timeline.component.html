@@ -1,0 +1,22 @@
+<div class="timeline" [class.row]="layout === 'row'">
+  @for (step of steps; track step.stepNo; let last = $last) {
+    <div class="step">
+      <div class="dot" [class]="'dot ' + state(step)">
+        @switch (state(step)) {
+          @case ('done') { <span class="material-icons-outlined">check</span> }
+          @case ('bad') { <span class="material-icons-outlined">close</span> }
+          @default { {{ step.stepNo }} }
+        }
+      </div>
+      <div class="info">
+        <div class="name">{{ step.name }}</div>
+        <div class="who muted">
+          @if (step.decidedByName) { {{ step.decidedByName }}@if (step.actingForName) { (for {{ step.actingForName }}) } · {{ step.status.toLowerCase() }} {{ step.decidedAt | dateFormat }} }
+          @else { {{ step.status === 'Pending' ? 'Waiting' : 'Not started' }} }
+        </div>
+        @if (step.comment && layout === 'column') { <div class="comment">“{{ step.comment }}”</div> }
+      </div>
+      @if (!last) { <div class="line" [class.done]="state(step) === 'done'"></div> }
+    </div>
+  }
+</div>

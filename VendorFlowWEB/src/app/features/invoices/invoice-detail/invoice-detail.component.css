@@ -1,0 +1,7 @@
+.head { margin-top: 10px; }
+.big { font-size: 24px; font-weight: 700; margin-top: 4px; }
+.variance-bad { background: var(--red-soft); border-color: #f5b8c2; }
+.pad { padding: 18px 20px 4px; }
+.disc { padding: 4px 0; }
+.top { margin-top: 18px; }
+.hist { padding: 6px 0; border-bottom: 1px solid var(--border); }

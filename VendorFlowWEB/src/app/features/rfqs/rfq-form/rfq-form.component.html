@@ -1,0 +1,61 @@
+<div class="page">
+  <app-page-header title="New RFQ" subtitle="Choose what you need, who to ask and the deadline. The invitations are sent when you open the RFQ.">
+    <button class="btn primary" (click)="save()" [disabled]="saving">Save draft</button>
+  </app-page-header>
+
+  <form [formGroup]="form" class="form">
+    <div class="card">
+      <h2>Details</h2>
+      <div class="form-grid">
+        <div class="field">
+          <label>Title *</label>
+          <input formControlName="title" />
+          @if (invalid('title')) { <span class="error">Title is required.</span> }
+        </div>
+        <div class="field">
+          <label>From approved requisition (optional)</label>
+          <select [value]="form.value.requisitionId" (change)="onRequisitionChange($any($event.target).value)">
+            <option value="">— none —</option>
+            @for (r of approvedRequisitions; track r.id) { <option [value]="r.id" [selected]="r.id === form.value.requisitionId">{{ r.number }} · {{ r.title }}</option> }
+          </select>
+        </div>
+        <div class="field">
+          <label>Deadline *</label>
+          <input type="datetime-local" formControlName="deadline" />
+          @if (invalid('deadline')) { <span class="error">Set the deadline for quotations.</span> }
+        </div>
+        <div class="field full"><label>Description</label><textarea rows="2" formControlName="description"></textarea></div>
+      </div>
+    </div>
+
+    <div class="card flush">
+      <div class="head"><h2>Items</h2><button class="btn" type="button" (click)="addLine()">Add item</button></div>
+      <table class="grid" formArrayName="items">
+        <thead><tr><th>#</th><th>Description</th><th>Unit</th><th class="right">Quantity</th><th></th></tr></thead>
+        <tbody>
+          @for (row of items.controls; track $index; let i = $index) {
+            <tr [formGroupName]="i">
+              <td>{{ i + 1 }}</td>
+              <td><input class="inline" formControlName="description" /></td>
+              <td><input class="inline narrow" formControlName="unit" /></td>
+              <td><input class="inline narrow right" type="number" formControlName="quantity" /></td>
+              <td><button class="x" type="button" (click)="removeLine(i)" aria-label="Remove"><span class="material-icons-outlined">close</span></button></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>{{ 'Vendors to invite' | labels }} ({{ selectedVendors.size }} selected)</h2>
+      <p class="muted">{{ 'Only approved vendors can be invited. Each vendor gets a private link and never sees other vendors’ prices.' | labels }}</p>
+      <div class="vendor-grid">
+        @for (v of vendors; track v.id) {
+          <label class="vendor"><input type="checkbox" (change)="toggleVendor(v.id, $any($event.target).checked)" [checked]="selectedVendors.has(v.id)" />
+            <span><strong>{{ v.name }}</strong><small class="muted">{{ v.category }} · {{ v.city }}</small></span></label>
+        } @empty { <p class="muted">{{ 'No approved vendors yet.' | labels }}</p> }
+      </div>
+    </div>
+    <a class="btn" routerLink="/rfqs">Cancel</a>
+  </form>
+</div>

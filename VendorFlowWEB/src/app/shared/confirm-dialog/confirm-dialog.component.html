@@ -1,0 +1,16 @@
+<h2 mat-dialog-title>{{ data.title }}</h2>
+<mat-dialog-content>
+  @if (data.message) { <p class="muted">{{ data.message }}</p> }
+  @if (data.commentLabel) {
+    <div class="field">
+      <label>{{ data.commentLabel }}@if (data.commentRequired) { <span class="error-text"> *</span> }</label>
+      <textarea rows="3" [(ngModel)]="comment"></textarea>
+    </div>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button class="btn" (click)="cancel()">Cancel</button>
+  <button class="btn" [class.primary]="!data.danger" [class.green]="false" [class.danger]="data.danger" [disabled]="!canConfirm" (click)="confirm()">
+    {{ data.confirmText || 'Confirm' }}
+  </button>
+</mat-dialog-actions>

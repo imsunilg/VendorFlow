@@ -1,0 +1,6 @@
+.panel { display: grid; place-items: center; min-height: 100vh; background: #fff; padding: 24px; }
+.box { width: min(440px, 100%); }
+.box h2 { font-size: 26px; margin: 0; }
+.box > p.muted { margin: 4px 0 22px; }
+.wide { width: 100%; justify-content: center; padding: 13px; }
+.foot { text-align: center; margin-top: 20px; }

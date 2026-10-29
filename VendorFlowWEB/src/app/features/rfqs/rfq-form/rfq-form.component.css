@@ -1,0 +1,9 @@
+.form { max-width: 1000px; }
+.head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px 6px; }
+.head h2 { margin: 0; }
+input.inline { padding: 8px 10px; }
+input.narrow { width: 110px; }
+.x { background: none; border: 0; cursor: pointer; color: var(--muted); }
+.vendor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.vendor { display: flex; gap: 10px; align-items: center; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; cursor: pointer; }
+.vendor span { display: flex; flex-direction: column; }

@@ -1,0 +1,16 @@
+<div class="page">
+  <app-page-header title="Notifications" [subtitle]="unread + ' unread'">
+    <button class="btn" (click)="toggleUnread()">{{ onlyUnread ? 'Show all' : 'Only unread' }}</button>
+    <button class="btn" (click)="readAll()" [disabled]="unread === 0">Mark all read</button>
+  </app-page-header>
+
+  @if (loading) { <app-loading-spinner /> }
+  @else if (items.length === 0) { <div class="card"><app-empty-state icon="notifications_none" message="No notifications." /></div> }
+  @for (n of items; track n.id) {
+    <button class="note card" [class.unread]="!n.read" (click)="open(n)">
+      <span class="ic" [class]="'ic ' + tone(n.type)"><span class="material-icons-outlined">notifications_none</span></span>
+      <span class="text"><strong>{{ n.title }}</strong><span class="muted">{{ n.body }}</span></span>
+      <span class="muted time">{{ n.createdAt | dateFormat: true }}</span>
+    </button>
+  }
+</div>

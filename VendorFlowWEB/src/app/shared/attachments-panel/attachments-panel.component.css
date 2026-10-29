@@ -1,0 +1,4 @@
+.file { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.file .material-icons-outlined { color: var(--muted); }
+.file a { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.x { background: none; border: 0; cursor: pointer; color: var(--muted); }

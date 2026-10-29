@@ -1,0 +1,73 @@
+<div class="page">
+  <app-page-header [title]="id ? 'Edit Requisition' : 'New Requisition'" subtitle="Fill in the details, add line items, then submit for approval.">
+    <button class="btn" (click)="save(false)" [disabled]="saving">Save draft</button>
+    <button class="btn primary" (click)="save(true)" [disabled]="saving">Submit for approval</button>
+  </app-page-header>
+
+  @if (loading) { <app-loading-spinner /> } @else {
+    <form [formGroup]="form" class="form">
+      <div class="card">
+        <h2>Basic details</h2>
+        <div class="form-grid">
+          <div class="field">
+            <label>Title *</label>
+            <input formControlName="title" />
+            @if (invalid('title')) { <span class="error">Title is required.</span> }
+          </div>
+          <div class="field">
+            <label>Department *</label>
+            <select formControlName="departmentId">
+              <option value="">Select department</option>
+              @for (d of departments; track d.id) { <option [value]="d.id">{{ d.name }}</option> }
+            </select>
+            @if (invalid('departmentId')) { <span class="error">Choose a department.</span> }
+          </div>
+          <div class="field">
+            <label>Cost centre *</label>
+            <select formControlName="costCentreId">
+              <option value="">Select cost centre</option>
+              @for (c of costCentreOptions; track c.id) { <option [value]="c.id">{{ c.code }} · {{ c.name }}</option> }
+            </select>
+            @if (invalid('costCentreId')) { <span class="error">Choose a cost centre.</span> }
+          </div>
+          <div class="field">
+            <label>Required delivery date *</label>
+            <input type="date" formControlName="requiredDate" />
+            @if (invalid('requiredDate')) { <span class="error">Choose a date.</span> }
+          </div>
+          <div class="field">
+            <label>Priority</label>
+            <select formControlName="priority"><option>Low</option><option>Medium</option><option>High</option></select>
+          </div>
+          <div class="field full"><label>Justification</label><textarea rows="3" formControlName="justification"></textarea></div>
+        </div>
+      </div>
+
+      <div class="card flush">
+        <div class="head"><h2>Line items</h2><button class="btn" type="button" (click)="addLine()"><span class="material-icons-outlined">add</span> Add item</button></div>
+        <div class="table-scroll">
+          <table class="grid" formArrayName="items">
+            <thead><tr><th>#</th><th>Description</th><th>Unit</th><th class="right">Qty</th><th class="right">Est. unit price</th><th class="right">Total</th><th></th></tr></thead>
+            <tbody>
+              @for (row of items.controls; track $index; let i = $index) {
+                <tr [formGroupName]="i">
+                  <td>{{ i + 1 }}</td>
+                  <td><input class="inline" formControlName="description" /></td>
+                  <td><input class="inline narrow" formControlName="unit" /></td>
+                  <td><input class="inline narrow right" type="number" formControlName="quantity" /></td>
+                  <td><input class="inline mid right" type="number" step="0.01" formControlName="estUnitPrice" /></td>
+                  <td class="right money">{{ lineTotal(row.value) | money }}</td>
+                  <td><button class="x" type="button" (click)="removeLine(i)" aria-label="Remove line"><span class="material-icons-outlined">close</span></button></td>
+                </tr>
+              }
+            </tbody>
+            <tfoot><tr><td colspan="5" class="right"><strong>Estimated total</strong></td><td class="right money"><strong>{{ total | money }}</strong></td><td></td></tr></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <div class="alert info">The approval route is chosen automatically from the amount and department when you submit. You can attach files after saving the draft.</div>
+      <a class="btn" [routerLink]="id ? ['/requisitions', id] : ['/requisitions']">Cancel</a>
+    </form>
+  }
+</div>

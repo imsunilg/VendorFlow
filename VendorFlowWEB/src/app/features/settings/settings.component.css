@@ -1,0 +1,18 @@
+.quick { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pill { border: 1px solid var(--border); background: #f4f6fb; border-radius: 999px; padding: 5px 12px; cursor: pointer; font: inherit; }
+.pill.on { background: var(--primary-soft); color: var(--primary); border-color: #c5ccff; font-weight: 600; }
+.preview { border-color: #bcd0ff; }
+.head { display: flex; justify-content: space-between; align-items: center; }
+.mock { background: var(--navy); border-radius: 12px; padding: 16px; display: grid; gap: 6px; margin-bottom: 14px; }
+.mock-brand { color: #fff; font-weight: 700; margin-bottom: 8px; }
+.mock-item { color: #c9d1f5; padding: 8px 10px; border-radius: 8px; }
+.mock-item.active, .mock-item.on { background: #26388c; color: #fff; }
+.inner { margin-bottom: 10px; }
+.small { padding: 6px 12px; font-size: 13px; }
+.check { display: flex; gap: 10px; align-items: center; }
+.rules-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px 6px; }
+.rules-head h2 { margin: 0; }
+.pad { padding: 0 20px; }
+.step { display: grid; grid-template-columns: 30px 1fr 1fr auto; gap: 10px; align-items: center; margin-bottom: 10px; }
+.step input, .step select, td select { border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; background: #fff; }
+.no { background: var(--primary-soft); color: var(--primary); width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; }

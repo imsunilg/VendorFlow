@@ -1,0 +1,7 @@
+.stats { margin-bottom: 16px; }
+.icon.blue { background: var(--blue-soft); color: var(--blue); }
+.icon.amber { background: var(--amber-soft); color: var(--amber); }
+.icon.green { background: var(--green-soft); color: var(--green); }
+.filters .search { width: 300px; max-width: 100%; }
+.filters select { width: 180px; }
+.filters input[type='date'] { width: 160px; }

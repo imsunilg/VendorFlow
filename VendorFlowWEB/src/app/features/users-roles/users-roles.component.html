@@ -1,0 +1,88 @@
+<div class="page">
+  <app-page-header title="Users & Roles" subtitle="Invite people and control what they can do.">
+    <button class="btn primary" (click)="showInvite = !showInvite"><span class="material-icons-outlined">add</span> Invite user</button>
+  </app-page-header>
+
+  @if (showInvite) {
+    <form class="card" [formGroup]="inviteForm" (ngSubmit)="invite()">
+      <h2>Invite user</h2>
+      <div class="form-grid">
+        <div class="field"><label>Full name *</label><input formControlName="fullName" /></div>
+        <div class="field"><label>Work email *</label><input type="email" formControlName="email" /></div>
+      </div>
+      <div class="field"><label>Roles *</label>
+        <div class="chips">
+          @for (r of roles; track r.code) {
+            <label class="chip"><input type="checkbox" [checked]="inviteRoles.has(r.code)" (change)="toggle(inviteRoles, r.code, $any($event.target).checked)" /> {{ r.name }}</label>
+          }
+        </div>
+      </div>
+      <button class="btn primary" type="submit">Send invitation</button>
+      @if (inviteLink) {
+        <div class="alert info link">The user sets a password with this link (also e-mailed when SMTP is configured):
+          <input readonly [value]="inviteLink" /><button class="btn" type="button" (click)="copy(inviteLink)">Copy</button></div>
+      }
+    </form>
+  }
+
+  <div class="tabs">
+    <button [class.active]="tab === 'users'" (click)="open('users')">Users <span class="count">{{ users.length }}</span></button>
+    <button [class.active]="tab === 'roles'" (click)="open('roles')">Roles <span class="count">{{ roles.length }}</span></button>
+    @if (auth.has('audit.view')) { <button [class.active]="tab === 'audit'" (click)="open('audit')">Audit trail</button> }
+  </div>
+
+  @if (tab === 'users') {
+    <div class="filters"><input class="search" placeholder="Search name or email" [value]="search" (input)="search = $any($event.target).value" (keyup.enter)="loadUsers()" /><button class="btn" (click)="loadUsers()">Search</button></div>
+    @if (editing) {
+      <div class="card">
+        <h2>Roles of {{ editing.fullName }}</h2>
+        <div class="chips">
+          @for (r of roles; track r.code) { <label class="chip"><input type="checkbox" [checked]="chosenRoles.has(r.code)" (change)="toggle(chosenRoles, r.code, $any($event.target).checked)" /> {{ r.name }}</label> }
+        </div>
+        <div class="actions"><button class="btn primary" (click)="saveRoles()">Save roles</button><button class="btn" (click)="editing = null">Cancel</button></div>
+      </div>
+    }
+    <div class="card flush">
+      @if (loading) { <app-loading-spinner /> } @else {
+        <table class="grid">
+          <thead><tr><th>User</th><th>Roles</th><th>Last sign-in</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            @for (u of users; track u.id) {
+              <tr>
+                <td><strong>{{ u.fullName }}</strong><div class="muted">{{ u.email }}</div></td>
+                <td>@for (r of u.roles; track r) { <span class="role">{{ roleName(r) }}</span> }</td>
+                <td>{{ u.lastLoginAt | dateFormat: true }}</td>
+                <td><app-status-badge [status]="u.status" /></td>
+                <td class="right"><button class="btn" (click)="editRoles(u)">Edit roles</button> <button class="btn" (click)="toggleStatus(u)">{{ u.status === 'Disabled' ? 'Enable' : 'Disable' }}</button></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
+
+  @if (tab === 'roles') {
+    <div class="card flush">
+      <div class="table-scroll">
+        <table class="grid matrix">
+          <thead><tr><th>Permission</th>@for (r of roles; track r.code) { <th class="center">{{ r.name }}</th> }</tr></thead>
+          <tbody>
+            @for (p of permissions; track p) {
+              <tr><td>{{ p }}</td>@for (r of roles; track r.code) { <td class="center">{{ has(r, p) ? '✓' : '–' }}</td> }</tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  @if (tab === 'audit') {
+    <div class="card flush">
+      <table class="grid">
+        <thead><tr><th>When</th><th>User</th><th>Action</th><th>Entity</th></tr></thead>
+        <tbody>@for (a of audit; track a.id) { <tr><td>{{ a.createdAt | dateFormat: true }}</td><td>{{ a.userName || 'system' }}</td><td>{{ a.action }}</td><td>{{ a.entityType }}</td></tr> }</tbody>
+      </table>
+    </div>
+  }
+</div>

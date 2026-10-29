@@ -1,0 +1,2 @@
+/* The badge colours are global classes (.badge.green, .badge.amber ...) defined in styles.css. */
+:host { display: inline-block; }

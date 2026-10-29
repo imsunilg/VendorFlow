@@ -1,0 +1,73 @@
+<div class="page">
+  <app-page-header title="Approvals" subtitle="Review and decide on requests waiting for you.">
+    <select class="sort" [value]="sort" (change)="setSort($any($event.target).value)">
+      <option value="oldest">Oldest first</option><option value="newest">Newest first</option><option value="amount">Highest amount</option>
+    </select>
+    @if (auth.has('approvals.decide')) { <button class="btn" (click)="toggleDelegate()"><span class="material-icons-outlined">swap_horiz</span> Delegate</button> }
+  </app-page-header>
+
+  @if (showDelegate) {
+    <div class="card">
+      <h2>Delegate my approvals</h2>
+      <form [formGroup]="delegateForm" (ngSubmit)="saveDelegation()">
+        <div class="form-grid three">
+          <div class="field"><label>Delegate to *</label>
+            <select formControlName="toUserId"><option value="">Select user</option>@for (u of users; track u.id) { <option [value]="u.id">{{ u.fullName }}</option> }</select></div>
+          <div class="field"><label>From *</label><input type="date" formControlName="startDate" /></div>
+          <div class="field"><label>Until *</label><input type="date" formControlName="endDate" /></div>
+          <div class="field full"><label>Reason</label><input formControlName="reason" /></div>
+        </div>
+        <button class="btn primary" type="submit">Create delegation</button>
+      </form>
+      @for (d of delegations; track d.id) {
+        <div class="deleg">
+          <span><strong>{{ d.direction === 'outgoing' ? 'To ' + d.toName : 'From ' + d.fromName }}</strong> · {{ d.startDate | dateFormat }} – {{ d.endDate | dateFormat }}</span>
+          <app-status-badge [status]="d.active ? 'Active' : 'Disabled'" />
+          @if (d.direction === 'outgoing' && d.active) { <button class="btn" (click)="cancelDelegation(d)">Cancel</button> }
+        </div>
+      }
+    </div>
+  }
+
+  <div class="tabs">
+    @for (t of tabs; track t.key) {
+      <button [class.active]="tab === t.key" (click)="setTab(t.key)">{{ t.label }} <span class="count">{{ counts[t.key] ?? 0 }}</span></button>
+    }
+  </div>
+
+  @if (tab === 'pending') {
+    <div class="grid-3">
+      <div class="card"><div class="label muted">Pending value</div><div class="big">{{ stats.pendingValue ?? 0 | money:0 }}</div><div class="muted">across {{ counts.pending ?? 0 }} requests</div></div>
+      <div class="card"><div class="label muted">Average wait</div><div class="big">{{ stats.averageWaitDays ?? 0 }} days</div><div class="muted">target: under 2 days</div></div>
+      <div class="card"><div class="label muted">This week</div><div class="big">{{ stats.decidedThisWeek ?? 0 }} <small class="muted">decided</small></div><div class="muted">self-approval is blocked</div></div>
+    </div>
+  }
+
+  @if (loading) { <app-loading-spinner /> }
+  @else if (items.length === 0) { <div class="card"><app-empty-state icon="task_alt" message="Nothing here." /></div> }
+
+  @for (a of items; track a.id) {
+    <div class="card item">
+      <div class="top">
+        <div>
+          <strong class="title">{{ a.title }}</strong>
+          <app-status-badge [status]="a.priority" />
+          <div class="muted">{{ a.requestedByName }} · {{ a.departmentName || a.entityType.replace('_', ' ') }} · <a [routerLink]="open(a)">{{ a.number }}</a></div>
+        </div>
+        <div class="right"><div class="amount">{{ a.amount | money:0 }}</div><div class="muted">Waiting {{ a.waitingDays }} {{ a.waitingDays === 1 ? 'day' : 'days' }}</div></div>
+      </div>
+      <app-approval-timeline [steps]="a.steps" layout="row" />
+      @if (tab === 'pending' && auth.has('approvals.decide')) {
+        <div class="buttons">
+          <button class="btn green" [disabled]="busyId === a.id" (click)="approve(a)"><span class="material-icons-outlined">check</span> Approve</button>
+          <button class="btn danger" (click)="askReason(a, 'reject')"><span class="material-icons-outlined">close</span> Reject</button>
+          <button class="btn" (click)="askReason(a, 'request-changes')">Request changes</button>
+          <span class="spacer"></span>
+          <a class="btn" [routerLink]="open(a)">View details</a>
+        </div>
+      } @else {
+        <div class="buttons"><app-status-badge [status]="a.status" /><span class="spacer"></span><a class="btn" [routerLink]="open(a)">View details</a></div>
+      }
+    </div>
+  }
+</div>

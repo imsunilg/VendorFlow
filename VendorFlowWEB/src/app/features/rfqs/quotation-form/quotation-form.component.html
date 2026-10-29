@@ -1,0 +1,34 @@
+<form [formGroup]="form" (ngSubmit)="send()">
+  <div class="card flush">
+    <div class="table-scroll">
+      <table class="grid" formArrayName="lines">
+        <thead><tr><th>Item</th><th class="right">Qty</th><th class="right">Unit price</th><th class="right">Discount %</th><th class="right">Tax %</th><th class="right">Line total</th></tr></thead>
+        <tbody>
+          @for (row of lines.controls; track $index; let i = $index) {
+            <tr [formGroupName]="i">
+              <td>{{ items[i].description }}</td>
+              <td class="right">{{ items[i].quantity }} {{ items[i].unit }}</td>
+              <td><input class="inline num right" type="number" step="0.01" formControlName="unitPrice" /></td>
+              <td><input class="inline small right" type="number" step="0.01" formControlName="discountPercent" /></td>
+              <td><input class="inline small right" type="number" step="0.01" formControlName="taxPercent" /></td>
+              <td class="right money">{{ calc(i).total | money }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="form-grid three">
+      <div class="field"><label>Shipping</label><input type="number" step="0.01" formControlName="shipping" /></div>
+      <div class="field"><label>Delivery time (days)</label><input type="number" formControlName="deliveryDays" /></div>
+      <div class="field"><label>Warranty (months)</label><input type="number" formControlName="warrantyMonths" /></div>
+      <div class="field"><label>Payment terms</label><input formControlName="paymentTerms" placeholder="e.g. Net 30" /></div>
+      <div class="field full"><label>Notes</label><textarea rows="2" formControlName="notes"></textarea></div>
+    </div>
+    <div class="total">Total landed cost: <strong>{{ landed | money }}</strong></div>
+  </div>
+
+  <button class="btn primary" type="submit" [disabled]="busy">{{ busy ? 'Saving…' : submitText }}</button>
+</form>

@@ -1,0 +1,11 @@
+.head { margin-top: 10px; }
+.pad { padding: 18px 20px 4px; }
+.links { border-color: #bcd0ff; background: #f6f9ff; }
+.link-row { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; align-items: center; margin-bottom: 8px; }
+.link-row input { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; width: 100%; }
+.inline-form { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.inline-form input { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; flex: 1; min-width: 200px; }
+.clar { padding: 8px 0; border-bottom: 1px solid var(--border); }
+.tl { padding: 6px 0; }
+.rec { border-color: #bcd0ff; background: #f6f9ff; }
+@media (max-width: 800px) { .link-row { grid-template-columns: 1fr; } }

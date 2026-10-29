@@ -1,0 +1,66 @@
+<div class="page">
+  <app-page-header [title]="id ? 'Edit Purchase Order' : 'New Purchase Order'"
+    [subtitle]="fromRequisition ? 'Converting requisition ' + (requisition?.number ?? '') + ' — rates come from the requisition.' : 'Choose an approved vendor and add the line items.'">
+    <button class="btn primary" (click)="save()" [disabled]="saving">Save draft</button>
+  </app-page-header>
+
+  @if (loading) { <app-loading-spinner /> } @else {
+    <form [formGroup]="form" class="form">
+      <div class="card">
+        <h2>Order details</h2>
+        <div class="form-grid three">
+          <div class="field">
+            <label>{{ 'Vendor' | labels }} *</label>
+            <select formControlName="vendorId">
+              <option value="">Select…</option>
+              @for (v of vendors; track v.id) { <option [value]="v.id">{{ v.name }}</option> }
+            </select>
+            @if (invalid('vendorId')) { <span class="error">Choose a vendor.</span> }
+          </div>
+          <div class="field"><label>Expected delivery</label><input type="date" formControlName="expectedDelivery" /></div>
+          <div class="field"><label>Shipping</label><input type="number" step="0.01" formControlName="shipping" /></div>
+          <div class="field full"><label>Notes</label><textarea rows="2" formControlName="notes"></textarea></div>
+        </div>
+      </div>
+
+      @if (!fromRequisition) {
+        <div class="card flush">
+          <div class="head"><h2>Line items</h2><button class="btn" type="button" (click)="addLine()">Add item</button></div>
+          <div class="table-scroll">
+            <table class="grid" formArrayName="items">
+              <thead><tr><th>#</th><th>Description</th><th>Unit</th><th class="right">Qty</th><th class="right">Rate</th><th class="right">Disc %</th><th class="right">Tax %</th><th class="right">Total</th><th></th></tr></thead>
+              <tbody>
+                @for (row of items.controls; track $index; let i = $index) {
+                  <tr [formGroupName]="i">
+                    <td>{{ i + 1 }}</td>
+                    <td><input class="inline" formControlName="description" /></td>
+                    <td><input class="inline narrow" formControlName="unit" /></td>
+                    <td><input class="inline narrow right" type="number" formControlName="quantity" /></td>
+                    <td><input class="inline mid right" type="number" step="0.01" formControlName="rate" /></td>
+                    <td><input class="inline narrow right" type="number" step="0.01" formControlName="discountPercent" /></td>
+                    <td><input class="inline narrow right" type="number" step="0.01" formControlName="taxPercent" /></td>
+                    <td class="right money">{{ line(i).total | money }}</td>
+                    <td><button class="x" type="button" (click)="removeLine(i)" aria-label="Remove"><span class="material-icons-outlined">close</span></button></td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr><td colspan="7" class="right">Sub-total</td><td class="right money">{{ subtotal | money }}</td><td></td></tr>
+                <tr><td colspan="7" class="right">Tax</td><td class="right money">{{ taxTotal | money }}</td><td></td></tr>
+                <tr><td colspan="7" class="right"><strong>Total</strong></td><td class="right money"><strong>{{ grandTotal | money }}</strong></td><td></td></tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      } @else {
+        <div class="card flush">
+          <table class="grid">
+            <thead><tr><th>Description</th><th class="right">Qty</th><th class="right">Est. rate</th></tr></thead>
+            <tbody>@for (i of requisition?.items ?? []; track i.id) { <tr><td>{{ i.description }}</td><td class="right">{{ i.quantity }} {{ i.unit }}</td><td class="right money">{{ i.estUnitPrice | money }}</td></tr> }</tbody>
+          </table>
+        </div>
+      }
+      <a class="btn" [routerLink]="id ? ['/purchase-orders', id] : ['/purchase-orders']">Cancel</a>
+    </form>
+  }
+</div>

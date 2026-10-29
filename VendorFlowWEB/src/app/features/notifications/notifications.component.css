@@ -1,0 +1,8 @@
+.note { display: flex; gap: 14px; align-items: center; width: 100%; text-align: left; cursor: pointer; font: inherit; margin-bottom: 10px; }
+.note.unread { border-left: 4px solid var(--primary); background: #fbfcff; }
+.ic { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; }
+.ic.green { background: var(--green-soft); color: var(--green); }
+.ic.amber { background: var(--amber-soft); color: var(--amber); }
+.ic.red { background: var(--red-soft); color: var(--red); }
+.text { display: flex; flex-direction: column; flex: 1; }
+.time { white-space: nowrap; font-size: 12px; }

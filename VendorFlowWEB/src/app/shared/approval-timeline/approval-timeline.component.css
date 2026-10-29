@@ -1,0 +1,18 @@
+.timeline { display: flex; flex-direction: column; }
+.timeline.row { flex-direction: row; align-items: center; background: #f8f9fd; border-radius: 12px; padding: 12px 16px; gap: 8px; }
+.step { display: flex; gap: 10px; align-items: flex-start; position: relative; padding-bottom: 14px; }
+.row .step { padding-bottom: 0; align-items: center; flex: 1; }
+.row .step:last-child { flex: 0 0 auto; }
+.dot { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px; flex: none; background: var(--grey-soft); color: var(--muted); }
+.dot .material-icons-outlined { font-size: 18px; }
+.dot.done { background: var(--green); color: #fff; }
+.dot.current { background: #ffb36b; color: #7a3c00; }
+.dot.bad { background: var(--red); color: #fff; }
+.dot.info { background: var(--blue); color: #fff; }
+.name { font-weight: 600; }
+.who { font-size: 12px; }
+.comment { font-size: 12px; margin-top: 2px; font-style: italic; }
+.step .line { position: absolute; left: 14px; top: 32px; bottom: 0; width: 2px; background: var(--border); }
+.step .line.done { background: var(--green); }
+.row .step .line { position: static; flex: 1; height: 2px; min-width: 40px; width: auto; background: var(--border); }
+.row .step .line.done { background: var(--green); }

@@ -1,0 +1,36 @@
+<div class="page">
+  <app-page-header title="Purchase Requisitions" subtitle="Request goods and services, track approvals end to end.">
+    <button class="btn" (click)="exportCsv()"><span class="material-icons-outlined">download</span> Export CSV</button>
+    @if (auth.has('requisitions.create')) { <a class="btn primary" routerLink="/requisitions/new"><span class="material-icons-outlined">add</span> New Requisition</a> }
+  </app-page-header>
+
+  <div class="grid-4 stats">
+    <div class="card kpi"><div class="icon blue"><span class="material-icons-outlined">description</span></div><div><div class="label">Draft</div><div class="value">{{ counts['Draft'] ?? 0 }}</div></div></div>
+    <div class="card kpi"><div class="icon amber"><span class="material-icons-outlined">schedule</span></div><div><div class="label">In approval</div><div class="value">{{ counts['PendingApproval'] ?? 0 }}</div></div></div>
+    <div class="card kpi"><div class="icon green"><span class="material-icons-outlined">check</span></div><div><div class="label">Approved</div><div class="value">{{ counts['Approved'] ?? 0 }}</div></div></div>
+    <div class="card kpi"><div class="icon"><span class="material-icons-outlined">shopping_cart</span></div><div><div class="label">Converted to PO</div><div class="value">{{ counts['ConvertedToPO'] ?? 0 }}</div></div></div>
+  </div>
+
+  <div class="tabs">
+    @for (t of tabs; track t.label; let i = $index) {
+      <button [class.active]="activeTab === i" (click)="selectTab(i)">{{ t.label }} @if (t.count === 'All' || t.count === 'Mine') { <span class="count">{{ counts[t.count] ?? 0 }}</span> }</button>
+    }
+  </div>
+
+  <div class="filters">
+    <input class="search" placeholder="Search requisition, item..." [value]="query.search" (input)="setField('search', $any($event.target).value)" (keyup.enter)="filterChanged()" />
+    <select (change)="setField('departmentId', $any($event.target).value); filterChanged()">
+      <option value="">Department</option>
+      @for (d of departments; track d.id) { <option [value]="d.id">{{ d.name }}</option> }
+    </select>
+    <input type="date" title="Required from" (change)="setField('dateFrom', $any($event.target).value); filterChanged()" />
+    <input type="date" title="Required until" (change)="setField('dateTo', $any($event.target).value); filterChanged()" />
+    <button class="btn" (click)="filterChanged()">Search</button>
+  </div>
+
+  <div class="card flush">
+    <app-data-table [columns]="columns" [rows]="rows" [totalCount]="total" [page]="query.page" [pageSize]="query.pageSize" [loading]="loading"
+      [sortKey]="query.sortBy" [sortDir]="query.sortDir" linkTemplate="/requisitions/:id" emptyText="No requisitions found."
+      (pageChange)="onPage($event)" (sortChange)="onSort($event)" />
+  </div>
+</div>

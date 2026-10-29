@@ -1,0 +1,148 @@
+<div class="page">
+  <app-page-header title="Organization Settings" subtitle="Rename the app and the word “Vendor” to match your business — no code change needed.">
+    <button class="btn primary" (click)="save()">Save changes</button>
+  </app-page-header>
+
+  <div class="tabs">
+    @for (t of tabs; track t.key) { <button [class.active]="tab === t.key" (click)="tab = t.key">{{ t.label }}</button> }
+  </div>
+
+  <form [formGroup]="form">
+    @if (tab === 'branding') {
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <h2>Branding</h2>
+            <div class="form-grid">
+              <div class="field"><label>Application display name</label><input formControlName="appDisplayName" />
+                @if (form.controls.appDisplayName.invalid) { <span class="error">1 to 50 characters.</span> }</div>
+              <div class="field"><label>Organization name</label><input formControlName="organizationName" /></div>
+              <div class="field full"><label>Logo</label><app-file-upload hint="PNG or JPG" accept=".png,.jpg,.jpeg" (fileSelected)="uploadLogo($event)" /></div>
+            </div>
+          </div>
+          <div class="card">
+            <h2>Terminology</h2>
+            <div class="form-grid">
+              <div class="field"><label>Singular label</label><input formControlName="vendorLabelSingular" />
+                @if (form.controls.vendorLabelSingular.invalid) { <span class="error">1 to 50 characters.</span> }</div>
+              <div class="field"><label>Plural label</label><input formControlName="vendorLabelPlural" />
+                @if (form.controls.vendorLabelPlural.invalid) { <span class="error">1 to 50 characters.</span> }</div>
+            </div>
+            <div class="quick"><span class="muted">Quick pick:</span>
+              @for (w of quickPicks; track w) { <button type="button" class="pill" [class.on]="form.value.vendorLabelSingular === w" (click)="pick(w)">{{ w }}</button> }
+            </div>
+          </div>
+        </div>
+
+        <div class="card preview">
+          <div class="head"><h2>Live preview</h2><span class="badge indigo">Updates instantly</span></div>
+          <div class="mock">
+            <div class="mock-brand">{{ settings.appName }}</div>
+            <div class="mock-item active">Dashboard</div>
+            <div class="mock-item on">{{ 'Vendors' | labels }}</div>
+            <div class="mock-item">Requisitions</div>
+            <div class="mock-item">Purchase Orders</div>
+          </div>
+          <div class="card inner"><strong>{{ settings.vendors }}</strong><p class="muted">{{ 'Onboard, approve and manage your vendors.' | labels }}</p><span class="btn primary small">+ {{ 'Add Vendor' | labels }}</span></div>
+          <p class="muted">Internal names (tables, API routes, permissions) stay unchanged — only displayed text changes.</p>
+        </div>
+      </div>
+    }
+
+    @if (tab === 'numbering') {
+      <div class="card">
+        <h2>Document numbering</h2>
+        <p class="muted">Use {{ '{YYYY}' }} for the year and {{ '{0000}' }} for the counter (the zeros set the width). Example PO number: <strong>{{ sample }}</strong></p>
+        <div class="form-grid three" formGroupName="numbering">
+          @for (k of numberingKeys; track k) { <div class="field"><label>{{ numberingLabel(k) }}</label><input [formControlName]="k" /></div> }
+        </div>
+      </div>
+    }
+
+    @if (tab === 'tax') {
+      <div class="card">
+        <h2>Tax, currency and matching</h2>
+        <div class="form-grid three">
+          <div class="field"><label>Currency (3 letters)</label><input formControlName="currency" maxlength="3" />
+            @if (form.controls.currency.invalid) { <span class="error">Use a code such as INR.</span> }</div>
+          <div class="field"><label>Time zone</label><input formControlName="timeZone" /></div>
+          <div class="field"><label>Default tax % (e.g. GST)</label><input type="number" formControlName="defaultTaxPercent" /></div>
+          <div class="field"><label>Invoice matching tolerance %</label><input type="number" step="0.1" formControlName="invoiceTolerancePct" /></div>
+        </div>
+        <p class="muted">Example: {{ 100000 | money }} at {{ form.value.defaultTaxPercent }}% tax is {{ 100000 * (1 + (form.value.defaultTaxPercent ?? 0) / 100) | money }}.</p>
+      </div>
+    }
+
+    @if (tab === 'notifications') {
+      <div class="card">
+        <h2>Notifications</h2>
+        <label class="check"><input type="checkbox" formControlName="emailNotifications" /> Also send notifications by e-mail (needs SMTP on the server; otherwise they wait in the outbox)</label>
+        <p class="muted">In-app notifications are always on.</p>
+        <button class="btn" type="button" (click)="runChecks()">Run expiry / due-date checks now</button>
+      </div>
+    }
+  </form>
+
+  @if (tab === 'approvals') {
+    <div class="card">
+      <h2>Approval behaviour</h2>
+      <label class="check"><input type="checkbox" [checked]="form.value.allowSelfApproval" (change)="form.patchValue({ allowSelfApproval: $any($event.target).checked })" /> Allow people to approve their own requests (off by default)</label>
+      <p class="muted">Remember to press “Save changes” after changing this.</p>
+    </div>
+
+    <div class="card flush">
+      <div class="rules-head"><h2>Approval rules</h2><button class="btn" (click)="newRule()">Add rule</button></div>
+      <table class="grid">
+        <thead><tr><th>Rule</th><th>For</th><th>Amount range</th><th>Steps</th><th></th></tr></thead>
+        <tbody>
+          @for (r of rules; track r.id) {
+            <tr><td>{{ r.name }}</td><td>{{ r.entityType === 'requisition' ? 'Requisitions' : 'Purchase orders' }}{{ r.departmentName ? ' · ' + r.departmentName : '' }}</td>
+              <td>{{ r.minAmount | money:0 }} – {{ r.maxAmount === null ? 'no limit' : (r.maxAmount | money:0) }}</td>
+              <td>@for (s of r.steps; track s.stepNo; let last = $last) { {{ s.name }}{{ last ? '' : ' → ' }} }</td>
+              <td class="right"><button class="btn" (click)="editRule(r)">Edit</button> <button class="btn danger" (click)="deleteRule(r)">Delete</button></td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (showRule) {
+      <form class="card" [formGroup]="ruleForm" (ngSubmit)="saveRule()">
+        <h2>{{ ruleForm.value.id ? 'Edit rule' : 'New rule' }}</h2>
+        <div class="form-grid three">
+          <div class="field"><label>Name *</label><input formControlName="name" /></div>
+          <div class="field"><label>Applies to</label><select formControlName="entityType"><option value="requisition">Requisitions</option><option value="purchase_order">Purchase orders</option></select></div>
+          <div class="field"><label>Department (optional)</label><select formControlName="departmentId"><option value="">All departments</option>@for (d of departments; track d.id) { <option [value]="d.id">{{ d.name }}</option> }</select></div>
+          <div class="field"><label>Minimum amount</label><input type="number" formControlName="minAmount" /></div>
+          <div class="field"><label>Maximum amount (empty = no limit)</label><input type="number" formControlName="maxAmount" /></div>
+          <div class="field"><label>Priority (higher wins)</label><input type="number" formControlName="priority" /></div>
+        </div>
+        <h2>Steps (in order)</h2>
+        <div formArrayName="steps">
+          @for (s of steps.controls; track $index; let i = $index) {
+            <div class="step" [formGroupName]="i">
+              <span class="no">{{ i + 1 }}</span>
+              <input formControlName="name" placeholder="Step name" />
+              <select formControlName="roleCode">@for (r of roles; track r.code) { <option [value]="r.code">{{ r.name }}</option> }</select>
+              <button class="btn" type="button" (click)="removeStep(i)">Remove</button>
+            </div>
+          }
+        </div>
+        <div class="actions"><button class="btn" type="button" (click)="addStep()">Add step</button><button class="btn primary" type="submit">Save rule</button><button class="btn" type="button" (click)="showRule = false">Cancel</button></div>
+      </form>
+    }
+
+    <div class="card flush">
+      <div class="rules-head"><h2>Department managers</h2></div>
+      <p class="muted pad">When a manager is set, only that person (or their delegate) can approve the “Dept Manager” step for that department.</p>
+      <table class="grid">
+        <thead><tr><th>Department</th><th>Manager</th></tr></thead>
+        <tbody>
+          @for (d of deptManagers; track d.id) {
+            <tr><td>{{ d.name }}</td>
+              <td><select [value]="d.managerUserId ?? ''" (change)="setManager(d.id, $any($event.target).value)"><option value="">Any user with the role</option>@for (u of users; track u.id) { <option [value]="u.id">{{ u.fullName }}</option> }</select></td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

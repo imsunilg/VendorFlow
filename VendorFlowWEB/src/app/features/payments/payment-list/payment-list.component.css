@@ -1,0 +1,7 @@
+.stats { margin-bottom: 16px; }
+.icon.green { background: var(--green-soft); color: var(--green); }
+.icon.amber { background: var(--amber-soft); color: var(--amber); }
+.icon.red { background: var(--red-soft); color: var(--red); }
+.icon.blue { background: var(--blue-soft); color: var(--blue); }
+.pay { max-width: 820px; margin-top: 18px; }
+.small { font-size: 12px; }

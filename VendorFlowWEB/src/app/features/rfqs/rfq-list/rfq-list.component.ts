@@ -1,0 +1,61 @@
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
+import { RfqService } from '../../../core/services/data.services';
+import { ToastService } from '../../../core/services/toast.service';
+import { TableColumn } from '../../../core/models/models';
+import { DataTableComponent } from '../../../shared/data-table/data-table.component';
+import { PageHeaderComponent } from '../../../shared/page-header/page-header.component';
+
+@Component({
+  changeDetection: ChangeDetectionStrategy.Eager,
+  selector: 'app-rfq-list',
+  imports: [RouterLink, DataTableComponent, PageHeaderComponent],
+  templateUrl: './rfq-list.component.html',
+  styleUrl: './rfq-list.component.css'
+})
+export class RfqListComponent implements OnInit {
+  auth = inject(AuthService);
+  private service = inject(RfqService);
+  private toast = inject(ToastService);
+  private route = inject(ActivatedRoute);
+
+  columns: TableColumn[] = [
+    { key: 'number', label: 'RFQ', type: 'link', sortKey: 'number' },
+    { key: 'title', label: 'Title', sortKey: 'title' },
+    { key: 'requisitionNumber', label: 'Requisition' },
+    { key: 'vendorsInvited', label: 'Vendors invited', type: 'number' },
+    { key: 'quotationsReceived', label: 'Quotations', type: 'number' },
+    { key: 'deadline', label: 'Deadline', type: 'date', sortKey: 'deadline' },
+    { key: 'status', label: 'Status', type: 'status', sortKey: 'status' }
+  ];
+  tabs = [
+    { key: '', label: 'All' }, { key: 'Draft', label: 'Draft' }, { key: 'Open', label: 'Open' },
+    { key: 'Closed', label: 'Closed' }, { key: 'Awarded', label: 'Awarded' }, { key: 'Cancelled', label: 'Cancelled' }
+  ];
+
+  rows: any[] = [];
+  counts: any = {};
+  total = 0;
+  loading = true;
+  query: any = { page: 1, pageSize: 10, sortBy: 'created_at', sortDir: 'desc', search: '', status: '' };
+
+  ngOnInit(): void {
+    this.query.search = this.route.snapshot.queryParamMap.get('search') ?? '';
+    this.load();
+  }
+
+  load(): void {
+    this.loading = true;
+    this.service.list(this.query).subscribe({
+      next: r => { this.rows = r.items; this.total = r.totalCount; this.counts = r.statusCounts ?? {}; this.loading = false; },
+      error: err => { this.loading = false; this.toast.error(err); }
+    });
+  }
+
+  setTab(status: string): void { this.query.status = status; this.query.page = 1; this.load(); }
+  setSearch(value: string): void { this.query.search = value; }
+  search(): void { this.query.page = 1; this.load(); }
+  onPage(p: number): void { this.query.page = p; this.load(); }
+  onSort(s: { key: string; dir: 'asc' | 'desc' }): void { this.query.sortBy = s.key; this.query.sortDir = s.dir; this.load(); }
+}

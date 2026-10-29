@@ -1,0 +1,21 @@
+<div class="page">
+  <app-page-header title="Invoices" subtitle="Register vendor invoices and match them with the purchase order and goods receipt.">
+    <button class="btn" (click)="exportCsv()"><span class="material-icons-outlined">download</span> Export CSV</button>
+    @if (auth.has('invoices.create')) { <a class="btn primary" routerLink="/invoices/new"><span class="material-icons-outlined">add</span> Register invoice</a> }
+  </app-page-header>
+
+  <div class="tabs">
+    @for (t of tabs; track t.label; let i = $index) {
+      <button [class.active]="active === i" (click)="selectTab(i)">{{ t.label }} <span class="count">{{ counts[t.count] ?? 0 }}</span></button>
+    }
+  </div>
+  <div class="filters">
+    <input class="search" placeholder="Search invoice number or vendor..." [value]="query.search" (input)="setSearch($any($event.target).value)" (keyup.enter)="search()" />
+    <button class="btn" (click)="search()">Search</button>
+  </div>
+
+  <div class="card flush">
+    <app-data-table [columns]="columns" [rows]="rows" [totalCount]="total" [page]="query.page" [pageSize]="query.pageSize" [loading]="loading"
+      [sortKey]="query.sortBy" [sortDir]="query.sortDir" linkTemplate="/invoices/:id" emptyText="No invoices found." (pageChange)="onPage($event)" (sortChange)="onSort($event)" />
+  </div>
+</div>

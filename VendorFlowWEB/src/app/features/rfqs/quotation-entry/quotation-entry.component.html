@@ -1,0 +1,8 @@
+<div class="page">
+  <app-page-header title="Enter quotation" [subtitle]="rfq ? rfq.number + ' · ' + rfq.title + ' · ' + vendorName : ''">
+    <a class="btn" [routerLink]="['/rfqs', rfqId]">Back</a>
+  </app-page-header>
+  @if (!rfq) { <app-loading-spinner /> } @else {
+    <div class="form"><app-quotation-form [items]="rfq.items" [busy]="saving" submitText="Save quotation" (submitQuote)="save($event)" /></div>
+  }
+</div>

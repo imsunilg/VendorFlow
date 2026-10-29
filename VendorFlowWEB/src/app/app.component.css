@@ -1,0 +1,2 @@
+/* The root component only hosts the router outlet. */
+:host { display: block; }

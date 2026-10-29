@@ -1,0 +1,7 @@
+<div class="page">
+  <app-page-header title="Quotations" subtitle="Pick an RFQ to compare the quotations received side by side." />
+  <div class="card flush">
+    <app-data-table [columns]="columns" [rows]="rows" [totalCount]="total" [page]="page" [pageSize]="10" [loading]="loading"
+      linkTemplate="/quotations/:id" emptyText="No RFQ has received a quotation yet." (pageChange)="onPage($event)" />
+  </div>
+</div>

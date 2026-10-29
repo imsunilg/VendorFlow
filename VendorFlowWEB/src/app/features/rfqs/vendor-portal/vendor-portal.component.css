@@ -1,0 +1,8 @@
+.portal { min-height: 100vh; background: var(--bg); }
+header { background: var(--navy); color: #fff; padding: 16px 28px; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 12px; }
+.logo { background: #5a6cf0; border-radius: 10px; padding: 6px; }
+main { max-width: 960px; margin: 0 auto; padding: 24px 16px 60px; }
+.decline { margin: 6px 0 16px; }
+.clar { padding: 8px 0; border-bottom: 1px solid var(--border); }
+.ask { display: flex; gap: 10px; margin-top: 12px; }
+.ask input { flex: 1; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }

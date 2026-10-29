@@ -1,0 +1,48 @@
+<div class="page">
+  <app-page-header title="New Goods Receipt" [subtitle]="po ? 'Receive goods against ' + po.number + ' · ' + po.vendorName : ''">
+    <a class="btn" [routerLink]="['/purchase-orders', poId]">Cancel</a>
+    <button class="btn primary" (click)="post()" [disabled]="saving">Post receipt</button>
+  </app-page-header>
+
+  @if (loading) { <app-loading-spinner /> } @else if (po) {
+    <form [formGroup]="form" class="form">
+      <div class="card">
+        <h2>Receipt details</h2>
+        <div class="form-grid three">
+          <div class="field"><label>Received on</label><input type="date" formControlName="receivedOn" [max]="today" /></div>
+          <div class="field"><label>Warehouse</label><input formControlName="warehouse" /></div>
+          <div class="field"><label>Delivery challan no.</label><input formControlName="deliveryChallan" /></div>
+          <div class="field"><label>Vehicle no.</label><input formControlName="vehicleNo" /></div>
+          <div class="field"><label>Received by</label><input formControlName="receivedBy" /></div>
+        </div>
+      </div>
+
+      <div class="card flush">
+        <div class="pad"><h2>Quantities</h2></div>
+        <div class="table-scroll">
+          <table class="grid" formArrayName="lines">
+            <thead><tr><th>Item</th><th class="right">Ordered</th><th class="right">Pending</th><th class="right">Received</th><th class="right">Accepted</th><th class="right">Rejected</th><th class="right">of which damaged</th></tr></thead>
+            <tbody>
+              @for (g of lines.controls; track $index; let i = $index) {
+                <tr [formGroupName]="i">
+                  <td>{{ po.items[i].description }}</td>
+                  <td class="right">{{ po.items[i].quantity }}</td>
+                  <td class="right">{{ po.items[i].pendingQty }}</td>
+                  <td><input class="qty" type="number" min="0" formControlName="receivedQty" (input)="autoAccept(i)" /></td>
+                  <td><input class="qty" type="number" min="0" formControlName="acceptedQty" /></td>
+                  <td><input class="qty" type="number" min="0" formControlName="rejectedQty" (input)="autoAccept(i)" /></td>
+                  <td><input class="qty" type="number" min="0" formControlName="damagedQty" /></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card"><h2>Inspection notes</h2><textarea rows="3" formControlName="inspectionNotes" class="notes"></textarea></div>
+
+      <div class="alert warn">Accepted + rejected must equal received. Receiving more than the PO quantity is blocked. Photos and the delivery challan can be attached after posting.</div>
+      @for (p of problems; track p) { <div class="alert error">{{ p }}</div> }
+    </form>
+  }
+</div>

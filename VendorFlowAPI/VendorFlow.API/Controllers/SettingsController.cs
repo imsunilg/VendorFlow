@@ -48,6 +48,10 @@ public class SettingsController(IDb db, ICurrentUser me, IFileStorage files) : C
     public async Task<IActionResult> Departments(CancellationToken ct) =>
         Ok(await db.JsonAsync("fn_lookup_departments", new { p_tenant_id = me.TenantId }, ct));
 
+    [Authorize, HttpGet("lookups/users")]
+    public async Task<IActionResult> Users(CancellationToken ct) =>
+        Ok(await db.JsonAsync("fn_lookup_users", new { p_tenant_id = me.TenantId }, ct));
+
     [Authorize, HttpGet("lookups/cost-centres")]
     public async Task<IActionResult> CostCentres(CancellationToken ct) =>
         Ok(await db.JsonAsync("fn_lookup_cost_centres", new { p_tenant_id = me.TenantId }, ct));

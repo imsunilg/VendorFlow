@@ -1,0 +1,57 @@
+<div class="table-scroll">
+  <table class="grid">
+    <thead>
+      <tr>
+        @for (col of columns; track col.key) {
+          <th [class.sortable]="col.sortKey" [class.right]="col.align === 'right'" (click)="sortBy(col)">
+            {{ col.label | labels }}
+            @if (col.sortKey && sortKey === col.sortKey) { <span>{{ sortDir === 'asc' ? '▲' : '▼' }}</span> }
+          </th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of rows; track row.id ?? $index) {
+        <tr (click)="rowClick.emit(row)">
+          @for (col of columns; track col.key) {
+            <td [class.right]="col.align === 'right'">
+              @switch (col.type) {
+                @case ('link') {
+                  @if (linkTemplate) { <a [routerLink]="link(row)" (click)="$event.stopPropagation()">{{ row[col.key] }}</a> }
+                  @else { {{ row[col.key] }} }
+                }
+                @case ('status') { <app-status-badge [status]="row[col.key]" /> }
+                @case ('priority') { <app-status-badge [status]="row[col.key]" /> }
+                @case ('money') { <span class="money">{{ row[col.key] | money }}</span> }
+                @case ('date') { {{ row[col.key] | dateFormat }} }
+                @case ('percent') { {{ row[col.key] === null || row[col.key] === undefined ? '—' : row[col.key] + '%' }} }
+                @case ('number') { {{ row[col.key] ?? '—' }} }
+                @case ('progress') {
+                  <div class="progress-cell">
+                    <div class="progress" [class.amber]="row[col.key] < 100"><span [style.width.%]="row[col.key]"></span></div>
+                    <span class="muted">{{ row[col.key] }}%</span>
+                  </div>
+                }
+                @default { {{ row[col.key] ?? '—' }} }
+              }
+            </td>
+          }
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (loading) { <app-loading-spinner /> }
+@else if (rows.length === 0) { <app-empty-state [message]="emptyText" /> }
+
+@if (showPager && !loading) {
+  <div class="pager">
+    <span>Showing {{ from }}–{{ to }} of {{ totalCount }}</span>
+    <span>
+      <button [disabled]="page <= 1" (click)="goTo(page - 1)">‹</button>
+      @for (p of pages; track p) { <button [class.active]="p === page" (click)="goTo(p)">{{ p }}</button> }
+      <button [disabled]="page >= pageCount" (click)="goTo(page + 1)">›</button>
+    </span>
+  </div>
+}

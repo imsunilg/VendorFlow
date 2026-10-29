@@ -1,0 +1,75 @@
+<div class="layout">
+  <aside class="sidebar" [class.open]="sidebarOpen">
+    <a class="brand" routerLink="/">
+      <span class="logo material-icons-outlined">shopping_cart</span>
+      <span>{{ settings.appName }}</span>
+    </a>
+
+    <nav>
+      @for (item of visible(mainMenu); track item.route) {
+        <a [routerLink]="item.route" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.route === '/' }">
+          <span class="material-icons-outlined">{{ item.icon }}</span>
+          <span class="text">{{ item.label | labels }}</span>
+          @if (item.badge && pendingApprovals > 0) { <span class="count">{{ pendingApprovals }}</span> }
+        </a>
+      }
+      @if (visible(adminMenu).length) {
+        <div class="section">ADMINISTRATION</div>
+        @for (item of visible(adminMenu); track item.route) {
+          <a [routerLink]="item.route" routerLinkActive="active">
+            <span class="material-icons-outlined">{{ item.icon }}</span>
+            <span class="text">{{ item.label }}</span>
+          </a>
+        }
+      }
+    </nav>
+
+    <div class="me">
+      <span class="avatar">{{ initials }}</span>
+      <div>
+        <div class="name">{{ auth.user?.fullName }}</div>
+        <div class="role">{{ roleText }}</div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header>
+      <button class="menu-btn" (click)="sidebarOpen = !sidebarOpen" aria-label="Menu"><span class="material-icons-outlined">menu</span></button>
+      <div class="crumbs">
+        <span class="muted">{{ settings.settings.organizationName }}</span>
+        <span class="muted">/</span>
+        <strong>{{ breadcrumb | labels }}</strong>
+      </div>
+
+      <div class="search">
+        <span class="material-icons-outlined">search</span>
+        <input [placeholder]="'Search vendors, POs, invoices...' | labels" (input)="searchText = $any($event.target).value" (keyup.enter)="search()" />
+      </div>
+
+      <button class="bell" [matMenuTriggerFor]="noteMenu" aria-label="Notifications">
+        <span class="material-icons-outlined">notifications_none</span>
+        @if (unread > 0) { <span class="dot">{{ unread }}</span> }
+      </button>
+      <mat-menu #noteMenu="matMenu" class="note-menu">
+        <div class="menu-title">Notifications</div>
+        @for (n of notes; track n.id) {
+          <button mat-menu-item (click)="openNote(n)">
+            <span class="note"><strong>{{ n.title }}</strong><small>{{ n.body }} · {{ n.createdAt | dateFormat: true }}</small></span>
+          </button>
+        } @empty {
+          <div class="menu-empty muted">You are all caught up.</div>
+        }
+        <button mat-menu-item routerLink="/notifications"><strong>View all</strong></button>
+      </mat-menu>
+
+      <button class="user" [matMenuTriggerFor]="userMenu"><span class="avatar small">{{ initials }}</span></button>
+      <mat-menu #userMenu="matMenu">
+        <div class="menu-title">{{ auth.user?.email }}</div>
+        <button mat-menu-item (click)="logout()">Sign out</button>
+      </mat-menu>
+    </header>
+
+    <main class="content"><router-outlet /></main>
+  </div>
+</div>

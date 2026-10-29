@@ -1,0 +1,13 @@
+.head { margin-top: 10px; }
+.pad { padding: 18px 20px 4px; }
+.stepper { display: flex; align-items: center; gap: 8px; overflow-x: auto; background: #f8f9fd; }
+.step { display: flex; align-items: center; gap: 8px; white-space: nowrap; font-weight: 500; }
+.dot { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--grey-soft); color: var(--muted); font-weight: 700; font-size: 12px; }
+.dot .material-icons-outlined { font-size: 17px; }
+.step.done .dot { background: var(--green); color: #fff; }
+.step.current .dot { background: #ffb36b; color: #7a3c00; }
+.bar { flex: 1; min-width: 30px; height: 2px; background: var(--border); }
+.bar.done { background: var(--green); }
+.sum { display: flex; justify-content: space-between; padding: 6px 0; }
+.sum.total { border-top: 1px solid var(--border); margin-top: 6px; padding-top: 10px; font-size: 18px; }
+.hist { padding: 6px 0; border-bottom: 1px solid var(--border); }

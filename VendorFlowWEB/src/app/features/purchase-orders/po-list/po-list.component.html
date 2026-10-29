@@ -1,0 +1,27 @@
+<div class="page">
+  <app-page-header title="Purchase Orders" subtitle="Open commitments to vendors — receive through goods receipts and invoice when ready.">
+    <button class="btn" (click)="exportCsv()"><span class="material-icons-outlined">download</span> Export CSV</button>
+    @if (auth.has('po.create')) { <a class="btn primary" routerLink="/purchase-orders/new"><span class="material-icons-outlined">add</span> New PO</a> }
+  </app-page-header>
+
+  <div class="grid-4 stats">
+    <div class="card"><div class="label muted">Open POs</div><div class="value">{{ stats.open?.amount ?? 0 | money }}</div><div class="muted">{{ stats.open?.count ?? 0 }} in pipeline</div></div>
+    <div class="card"><div class="label muted">Awaiting receipt</div><div class="value amber">{{ stats.awaitingReceipt?.amount ?? 0 | money }}</div><div class="muted">{{ stats.awaitingReceipt?.count ?? 0 }} pending</div></div>
+    <div class="card"><div class="label muted">Ready to invoice</div><div class="value green">{{ stats.readyToInvoice?.amount ?? 0 | money }}</div><div class="muted">{{ stats.readyToInvoice?.count ?? 0 }} received</div></div>
+    <div class="card"><div class="label muted">Draft</div><div class="value">{{ stats.draft?.amount ?? 0 | money }}</div><div class="muted">{{ stats.draft?.count ?? 0 }} in draft</div></div>
+  </div>
+
+  <div class="tabs">
+    @for (t of tabs; track t.key) { <button [class.active]="query.status === t.key" (click)="setTab(t.key)">{{ t.label }}</button> }
+  </div>
+  <div class="filters">
+    <input class="search" placeholder="Search PO number or vendor..." [value]="query.search" (input)="setSearch($any($event.target).value)" (keyup.enter)="search()" />
+    <button class="btn" (click)="search()">Search</button>
+  </div>
+
+  <div class="card flush">
+    <app-data-table [columns]="columns" [rows]="rows" [totalCount]="total" [page]="query.page" [pageSize]="query.pageSize" [loading]="loading"
+      [sortKey]="query.sortBy" [sortDir]="query.sortDir" linkTemplate="/purchase-orders/:id" emptyText="No purchase orders found."
+      (pageChange)="onPage($event)" (sortChange)="onSort($event)" />
+  </div>
+</div>

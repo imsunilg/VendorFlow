@@ -1,0 +1,2 @@
+/* Layout classes (.page-head, .actions) are global in styles.css. */
+:host { display: block; }

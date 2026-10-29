@@ -1,0 +1,4 @@
+.form { max-width: 1200px; }
+.pad { padding: 18px 20px 4px; }
+input.n { width: 110px; text-align: right; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+input.n.s { width: 80px; }

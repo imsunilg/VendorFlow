@@ -1,0 +1,14 @@
+.back { display: inline-block; margin-bottom: 10px; }
+.head { display: flex; gap: 18px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
+.head .title { flex: 1; min-width: 240px; }
+.avatar { width: 76px; height: 76px; border-radius: 18px; background: #6c7cf5; color: #fff; display: grid; place-items: center; font-size: 28px; font-weight: 700; }
+.avatar.sm { width: 40px; height: 40px; border-radius: 50%; font-size: 16px; }
+.badges { display: flex; gap: 8px; margin-top: 6px; }
+.pad { padding: 18px 20px 4px; }
+.contact { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; }
+.score { text-align: center; }
+.score .big { font-size: 56px; font-weight: 700; color: var(--green); }
+.score .big small { font-size: 22px; color: var(--muted); }
+.history-row { display: grid; grid-template-columns: 160px 200px 1fr auto; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.bank-form { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px; }
+@media (max-width: 900px) { .history-row { grid-template-columns: 1fr; } }

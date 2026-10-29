@@ -1,0 +1,96 @@
+<div class="page">
+  @if (loading) { <app-loading-spinner /> } @else if (po) {
+    <a routerLink="/purchase-orders">‹ Back to purchase orders</a>
+    <div class="page-head head">
+      <div>
+        <h1>{{ po.number }} <app-status-badge [status]="po.status" /></h1>
+        <p>{{ po.vendorName }} · Revision {{ po.revision }}@if (po.issuedAt) { · Issued {{ po.issuedAt | dateFormat }} }@if (po.requisitionNumber) { · From {{ po.requisitionNumber }} }</p>
+      </div>
+      <div class="actions">
+        <button class="btn" (click)="downloadPdf()"><span class="material-icons-outlined">download</span> Download PDF</button>
+
+        @if (status === 'Draft') {
+          @if (auth.has('po.create')) { <a class="btn" [routerLink]="['/purchase-orders', po.id, 'edit']">Edit</a> }
+          @if (auth.has('po.approve')) { <button class="btn primary" (click)="act('submit', 'Submitted for approval')">Submit for approval</button> }
+        }
+        @if (status === 'Approved' && auth.has('po.issue')) { <button class="btn primary" (click)="act('issue', 'Purchase order issued')">Issue to vendor</button> }
+        @if (['Approved', 'Issued', 'PartiallyReceived', 'OnHold'].includes(status) && auth.has('po.create')) { <button class="btn" (click)="revise()">Create revision</button> }
+        @if (['Issued', 'PartiallyReceived'].includes(status) && auth.has('grn.record')) { <a class="btn primary" [routerLink]="['/goods-receipts/new', po.id]">Record receipt</a> }
+        @if (['Issued', 'PartiallyReceived', 'FullyReceived', 'Closed'].includes(status) && auth.has('invoices.create')) { <a class="btn" routerLink="/invoices/new" [queryParams]="{ poId: po.id }">Register invoice</a> }
+        @if (['Issued', 'PartiallyReceived'].includes(status) && auth.has('po.issue')) {
+          @if (!po.acknowledgedAt) { <button class="btn" (click)="act('acknowledge', 'Acknowledgement recorded')">Mark acknowledged</button> }
+          <button class="btn" (click)="actWithReason('hold', 'Put on hold')">Hold</button>
+        }
+        @if (status === 'OnHold' && auth.has('po.issue')) { <button class="btn" (click)="act('resume', 'Resumed')">Resume</button> }
+        @if (status === 'FullyReceived' && auth.has('po.issue')) { <button class="btn" (click)="act('close', 'Closed')">Close PO</button> }
+        @if (status === 'PartiallyReceived' && auth.has('po.issue')) { <button class="btn" (click)="actWithReason('close', 'Short-close')">Short-close</button> }
+        @if (['Draft', 'PendingApproval', 'Approved', 'Issued', 'OnHold'].includes(status) && !anyReceived && auth.has('po.create')) { <button class="btn danger" (click)="actWithReason('cancel', 'Cancel PO', true)">Cancel</button> }
+      </div>
+    </div>
+
+    <div class="card stepper">
+      @for (s of steps; track s; let last = $last) {
+        <div class="step" [class]="'step ' + stepState(s)">
+          <span class="dot">@if (stepState(s) === 'done') { <span class="material-icons-outlined">check</span> } @else { {{ $index + 1 }} }</span>
+          <span>{{ stepLabel(s) }}</span>
+        </div>
+        @if (!last) { <div class="bar" [class.done]="stepState(s) === 'done'"></div> }
+      }
+    </div>
+    @if (['OnHold', 'Cancelled', 'Rejected', 'PendingApproval'].includes(status)) { <div class="alert warn">This purchase order is currently <strong>{{ status }}</strong>.</div> }
+
+    <div class="grid-2">
+      <div>
+        <div class="card flush">
+          <div class="pad"><h2>Line items</h2></div>
+          <div class="table-scroll">
+            <table class="grid">
+              <thead><tr><th>Item</th><th class="right">Qty</th><th class="right">Rate</th><th class="right">Disc.</th><th class="right">GST</th><th class="right">Total</th><th class="right">Received</th></tr></thead>
+              <tbody>
+                @for (i of po.items; track i.id) {
+                  <tr><td>{{ i.description }}</td><td class="right">{{ i.quantity }}</td><td class="right money">{{ i.rate | money }}</td>
+                    <td class="right">{{ i.discountPercent }}%</td><td class="right">{{ i.taxPercent }}%</td><td class="right money">{{ i.lineTotal | money }}</td>
+                    <td class="right">{{ i.receivedQty }} / {{ i.quantity }}</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        @if (po.receipts.length) {
+          <div class="card">
+            <h2>Goods receipts</h2>
+            @for (r of po.receipts; track r.id) { <div><a [routerLink]="['/goods-receipts', r.id]">{{ r.number }}</a> <span class="muted">· {{ r.receivedOn | dateFormat }}</span></div> }
+          </div>
+        }
+        <div class="card">
+          <h2>History</h2>
+          @for (h of po.history; track $index) {
+            <div class="hist"><strong>{{ h.action.replace('_', ' ') }}</strong> <span class="muted">{{ h.userName }} · {{ h.createdAt | dateFormat: true }}</span>@if (h.comment) { <span> · “{{ h.comment }}”</span> }</div>
+          }
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>Summary</h2>
+          <div class="sum"><span class="muted">Sub-total</span><strong>{{ po.subtotal | money }}</strong></div>
+          <div class="sum"><span class="muted">Discount</span><strong>{{ po.discountTotal | money }}</strong></div>
+          <div class="sum"><span class="muted">GST</span><strong>{{ po.taxTotal | money }}</strong></div>
+          <div class="sum"><span class="muted">Shipping</span><strong>{{ po.shipping | money }}</strong></div>
+          <div class="sum total"><span>Total</span><strong>{{ po.total | money }}</strong></div>
+          <div class="sum"><span class="muted">Expected delivery</span><span>{{ po.expectedDelivery | dateFormat }}</span></div>
+          <div class="sum"><span class="muted">Receipt</span><span>{{ po.receiptPct }}%</span></div>
+        </div>
+        @if (po.approval) { <div class="card"><h2>Approval</h2><app-approval-timeline [steps]="po.approval.steps" /></div> }
+        <div class="card">
+          <h2>Revision history</h2>
+          <div class="hist"><strong>Rev {{ po.revision }}</strong> <span class="muted">current</span></div>
+          @for (r of po.revisions; track r.revision) { <div class="hist"><strong>Rev {{ r.revision }}</strong> <span class="muted">{{ r.createdAt | dateFormat }} · {{ r.reason }}</span></div> }
+          <p class="muted">Issued POs are locked; changes need a new revision.</p>
+        </div>
+        <app-attachments-panel entityType="purchase_order" [entityId]="po.id" [canEdit]="auth.has('po.create')" />
+      </div>
+    </div>
+  }
+</div>
