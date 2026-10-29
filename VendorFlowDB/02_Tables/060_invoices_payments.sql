@@ -40,6 +40,8 @@ create table vendorflow.invoice_items (
     description text not null,
     quantity    numeric(18,3) not null check (quantity > 0),
     rate        numeric(18,2) not null check (rate >= 0),
+    discount_percent numeric(9,4) not null default 0,
+    net_amount  numeric(18,2) not null default 0,
     tax_amount  numeric(18,2) not null default 0,
     line_total  numeric(18,2) not null
 );
@@ -48,6 +50,7 @@ create table vendorflow.invoice_discrepancies (
     id          uuid primary key default gen_random_uuid(),
     tenant_id   uuid not null,
     invoice_id  uuid not null references vendorflow.invoices(id) on delete cascade,
+    po_item_id  uuid,
     check_name  text not null,
     expected    text,
     actual      text,
