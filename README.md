@@ -1,20 +1,21 @@
 # VendorFlow
 
-Multi-tenant procurement and vendor management: vendors → requisitions → approvals → RFQ → quotation comparison → purchase orders → goods receipts → invoices → payments → reports.
+Multi-tenant procurement and vendor management: vendors → requisitions → approvals → RFQ → quotation comparison → purchase orders → goods receipts → invoices (3-way match) → payments → reports. The app name and the word “Vendor” are configurable per organization.
 
 | Folder | What |
 |---|---|
-| `VendorFlowAPI` | ASP.NET Core API (Clean Architecture, Dapper, PostgreSQL functions/procedures) |
-| `VendorFlowWEB` | Angular + Material web app |
+| `VendorFlowAPI` | ASP.NET Core API (Clean Architecture; all data access through PostgreSQL functions/procedures) |
+| `VendorFlowWEB` | Angular 22 + Material web app |
 | `VendorFlowMOBILE` | Flutter app |
-| `VendorFlowDB` | SQL scripts (schema, functions, seed) – applied automatically by the API |
-| `VendorFlowDocs` | PRD, architecture, API, deployment docs |
-| `scripts` | `Setup-Development.ps1`, `Save-Phase.ps1`, `Validate-Environment.ps1` |
+| `VendorFlowDB` | SQL scripts (schema, functions, triggers, seed) – applied automatically by the API, which also creates `Vendor_db` |
+| `VendorFlowDocs` | PRD, architecture, database, API, setup, deployment docs and the final report |
+| `scripts` | `Setup-Development.ps1`, `Save-Phase.ps1` (safe local commit), `Validate-Environment.ps1`, `Apply-Database.ps1` |
 
 ## Quick start
 ```powershell
 ./scripts/Setup-Development.ps1 -DbPassword <your postgres password>
-dotnet run --project VendorFlowAPI/VendorFlow.API      # creates Vendor_db + schema on first run
-cd VendorFlowWEB; npm install; npm start               # http://localhost:4200
+dotnet run --project VendorFlowAPI/VendorFlow.API      # creates Vendor_db + schema + demo data; http://localhost:5080/swagger
+cd VendorFlowWEB; npm install; npm start               # http://localhost:4200   (priya.menon@democompany.in / Demo@12345)
+cd VendorFlowMOBILE; flutter pub get; flutter run
 ```
-Details: `VendorFlowDocs/Development/DEVELOPMENT_SETUP.md`. Progress: `VendorFlowDocs/Development/DEVELOPMENT_PROGRESS.md`.
+Docs: `VendorFlowDocs/Development/DEVELOPMENT_SETUP.md` · status and limitations: `VendorFlowDocs/Development/FINAL_REPORT.md`.

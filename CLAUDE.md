@@ -17,3 +17,6 @@ Multi-tenant procurement platform. One repo: `VendorFlowAPI` (.NET), `VendorFlow
 - Web: `cd VendorFlowWEB; npm start` / `npm run build`
 - Mobile: `cd VendorFlowMOBILE; flutter analyze; flutter test`
 - Postgres: CALL arguments cannot contain subqueries; use a variable.
+- Angular 22: components must use `changeDetection: ChangeDetectionStrategy.Eager` (default is OnPush) because pages assign plain properties after HTTP calls.
+- Local API for the web/mobile apps: `dotnet run --project VendorFlowAPI/VendorFlow.API` (port 5080, Development, demo data). Stop it before `dotnet test` (it locks the DLLs).
+- `Save-Phase.ps1` refuses secret files and the dev DB password; never bypass it.
